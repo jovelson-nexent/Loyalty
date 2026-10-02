@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loyalty program dashboard · Card Avantaj</title>
+<link rel="icon" href="../Guidelines/assets/logo/card-avantaj-symbol-color.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.mi…
+<style>
+
+  @font-face{
+
+    font-family:"Geologica";
+
+    src:url("../Guidelines/assets/fonts/Geologica-Variable.ttf") format("truetype-variations");
+
+    font-weight:100 900;
+
+    font-display:swap;
+
+  }
+
+  :root{
+
+    --red:#F21D2F; --red-alt:#F23E2E; --orange-red:#F25D27; --orange:#F2811D; --peach:#F2BC8D;
+
+    --bg:oklch(0.97 0.008 42); --surface:oklch(0.995 0.003 42); --subtle:oklch(0.93 0.012 42);
+
+    --border:oklch(0.89 0.016 42); --border-med:oklch(0.82 0.022 42);
+
+    --ink:oklch(0.17 0.016 42); --ink-2:oklch(0.38 0.016 42); --ink-muted:oklch(0.56 0.010 42);
+
+    --header-bg:oklch(0.13 0.022 38); --header-text:oklch(0.98 0.003 42); --header-muted:oklch(0.68 0.012 38);
+
+    --green:oklch(0.40 0.12 148); --green-bg:oklch(0.95 0.05 148 / 0.50); --red-bg:oklch(0.97 0.05 25 / 0.50);
+
+    --chart-muted:#7a6860; --chart-grid:rgba(160,110,90,0.09);
+
+    --gradient-ember:linear-gradient(135deg,#F21D2F 0%,#F25D27 52%,#F2811D 100%);
+
+    --pending-bg:rgba(242,129,29,.20); --pending-border:rgba(242,129,29,.55); --pending-ink:#7A4A0E;
+
+    --radius:8px;
+
+    --shadow:0 1px 3px oklch(0.13 0.022 38 / 0.06), 0 6px 20px oklch(0.13 0.022 38 / 0.04);
+
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+
+    margin:0;background:var(--bg);color:var(--ink);
+
+    font-family:"Geologica",Arial,"Segoe UI",system-ui,sans-serif;
+
+    font-variation-settings:"CRSV" 0;
+
+  }
+
+  h1,h2,.serif{font-family:Georgia,"Times New Roman",serif;}
+
+  .tabular{font-variant-numeric:tabular-nums;}
+ 
+  header.topbar{
+
+    background:var(--header-bg);color:var(--header-text);height:64px;padding:0 28px;display:flex;align-items:center;
+
+    justify-content:space-between;position:sticky;top:0;z-index:60;
+
+  }
+
+  header.topbar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--gradient-ember);}
+
+  .brand{display:flex;align-items:center;gap:12px;}
+
+  .brand img{height:32px;width:auto;display:block;}
+
+  .brand .name{font-weight:600;font-size:15px;}
+
+  .brand .sub{font-size:11.5px;color:var(--header-muted);font-weight:500;}
+
+  .topbar-right{display:flex;align-items:center;gap:16px;}
+
+  .last-available{font-size:11.5px;color:var(--header-muted);}
+
+  .last-available strong{color:var(--header-text);font-weight:600;}
+
+  .preview-badge{
+
+    background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);color:var(--peach);
+
+    font-size:11px;font-weight:600;padding:5px 12px;border-radius:999px;letter-spacing:.02em;
+
+  }
+ 
+  .app-body{display:flex;max-width:1520px;margin:0 auto;}
+ 
+  nav.sidebar{
+
+    width:210px;flex:0 0 auto;padding:24px 14px;position:sticky;top:64px;
+
+    height:calc(100vh - 64px);overflow-y:auto;border-right:1px solid var(--border);
+
+  }
+
+  nav.sidebar .navgroup-label{font-size:10px;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.12em;margin:16px 8px 6px;}
+
+  nav.sidebar .navgroup-label:first-child{margin-top:2px;}
+
+  nav.sidebar button.navlink{
+
+    display:block;width:100%;text-align:left;background:none;border:none;font-family:inherit;
+
+    font-size:13.5px;font-weight:600;color:var(--ink-2);padding:9px 10px;border-radius:7px;cursor:pointer;margin-bottom:2px;
+
+  }
+
+  nav.sidebar button.navlink:hover{background:var(--subtle);color:var(--ink);}
+
+  nav.sidebar button.navlink.active{background:var(--red);color:var(--surface);}
+ 
+  main{flex:1 1 auto;padding:26px 32px 80px;min-width:0;}
+ 
+  .filters-row{
+
+    display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);
+
+    border-radius:var(--radius);padding:10px 16px;box-shadow:var(--shadow);position:sticky;top:64px;z-index:40;margin-bottom:22px;
+
+  }
+
+  .filter-block label{display:block;font-size:10px;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
+
+  .filter-block select{font-family:inherit;font-size:12.5px;padding:6px 9px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink);width:150px;transition:border-color .15s,background .15s,color .15s;}
+
+  .filter-block select.filter-active{border-color:var(--orange);background:var(--pending-bg);color:var(--pending-ink);font-weight:700;}
+
+  .filter-sep{width:1px;align-self:stretch;background:var(--border);margin:0 2px;}
+
+  .preset-row{display:flex;gap:6px;}
+
+  .preset-btn{font-family:inherit;font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink-2);cursor:pointer;}
+
+  .preset-btn.active{background:var(--red);color:var(--surface);border-color:var(--red);}
+ 
+  .tabpage{display:none;}
+
+  .tabpage.active{display:block;}
+ 
+  .tab-eyebrow{font-size:.67rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin:0 0 8px;display:flex;align-items:center;gap:10px;}
+ 
+  .section-title{
+
+    font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(1.15rem,1.7vw,1.4rem);
+
+    color:var(--ink);letter-spacing:-0.01em;margin:32px 0 16px;display:flex;align-items:center;gap:12px;
+
+  }
+
+  .section-title::after{content:"";flex:1;height:1px;background:var(--border);}
+
+  .section-title:first-of-type{margin-top:0;}
+
+  .section-sub{font-size:11px;color:var(--ink-muted);margin:-10px 0 16px;font-weight:500;}
+ 
+  .kpi-grid{
+
+    display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--border);
+
+    border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
+
+  }
+
+  .kpi-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+
+  .kpi-grid.cols-2{grid-template-columns:repeat(2,1fr);}
+
+  .kpi-grid.cols-6{grid-template-columns:repeat(6,1fr);}
+
+  .kpi-card{background:var(--bg);padding:18px 20px;}
+
+  .kpi-card .label{font-size:11px;color:var(--ink-muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+
+  .kpi-card .value{font-size:1.7rem;font-weight:700;color:var(--orange-red);margin-top:6px;}
+
+  .kpi-card .foot{font-size:11px;color:var(--ink-muted);margin-top:5px;}
+
+  .kpi-card .foot.up{color:var(--green);} .kpi-card .foot.down{color:var(--red);}
+
+  .kpi-card.good .value{color:var(--green);}
+
+  .kpi-card.warn .value{color:var(--orange);}
+
+  .kpi-card.neutral .value{color:var(--ink);}
+
+  .kpi-card.pending{background:var(--pending-bg);}
+
+  .kpi-card.pending .value{color:var(--pending-ink);font-size:1.1rem;}
+ 
+  .kpi-hero-row{margin-top:14px;}
+
+  .kpi-hero-card{
+
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+
+    padding:16px 22px;box-shadow:var(--shadow);display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+
+  }
+
+  .kpi-hero-card .hero-label{font-size:11px;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.08em;min-width:190px;}
+
+  .kpi-hero-card .hero-value{font-size:1.9rem;font-weight:700;color:var(--orange-red);}
+
+  .kpi-hero-card .hero-foot{font-size:11.5px;color:var(--ink-muted);margin-left:auto;}
+ 
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px 10px;box-shadow:var(--shadow);}
+
+  .chart-card.full{grid-column:1/-1;}
+
+  .chart-card.pending{background:var(--pending-bg);border-color:var(--pending-border);}
+
+  .chart-card h3{margin:0 0 2px;font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+  .chart-card .desc{font-size:11.5px;color:var(--ink-muted);margin:0 0 10px;}
+
+  .chart-wrap{height:260px;position:relative;}
+
+  .chart-wrap.tall{height:340px;}
+
+  .chart-wrap.xtall{height:460px;}
+ 
+  .legend-key{display:flex;gap:16px;margin:0 0 10px;flex-wrap:wrap;}
+
+  .legend-key .item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ink-2);}
+
+  .legend-key .dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+ 
+  table.datatable{width:100%;border-collapse:collapse;font-size:12.5px;}
+
+  table.datatable th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);background:var(--subtle);border-bottom:2px solid var(--border);padding:7px 8px;}
+
+  table.datatable td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--ink);}
+
+  table.datatable tr:last-child td{border-bottom:none;}
+
+  table.datatable tr.total-row td{font-weight:700;}
+
+  table.datatable td.num, table.datatable th.num{text-align:right;font-variant-numeric:tabular-nums;}
+
+  table.datatable td.term{font-weight:600;color:var(--ink);white-space:nowrap;width:1%;}
+
+  table.datatable td.groupsep{border-left:2px solid var(--border-med);}
+
+  table.datatable th.groupsep{border-left:2px solid var(--border-med);}
+ 
+  table.datatable th.sortable{cursor:pointer;user-select:none;white-space:nowrap;}
+
+  table.datatable th.sortable:hover{color:var(--ink);}
+
+  table.datatable th.sortable .arrow{display:inline-block;width:9px;font-size:9px;color:var(--red);}
+ 
+  .table-scroll{max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;}
+
+  .table-scroll table.datatable{margin:0;}
+
+  .table-scroll thead th{position:sticky;top:0;z-index:1;}
+
+  .scroll-hint{font-size:10.5px;color:var(--ink-muted);margin:6px 2px 0;}
+ 
+  .level-chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;color:#fff;}
+
+  .level-chip.l2{background:var(--red-alt);}
+
+  .level-chip.l3{background:var(--red);}
+ 
+  .note-banner{background:var(--subtle);border:1px solid var(--border-med);color:var(--ink-2);font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:18px;}
+
+  .note-banner.future{background:transparent;border:1px dashed var(--border-med);color:var(--ink-muted);}
+
+  .note-banner.flag{background:var(--pending-bg);border-color:var(--pending-border);color:var(--pending-ink);}
+ 
+  .data-pending{
+
+    display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--pending-ink);
+
+    background:var(--pending-bg);border:1px solid var(--pending-border);padding:3px 9px;border-radius:999px;
+
+    letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+
+  }
+
+  .data-pending::before{content:"●";font-size:8px;color:var(--orange);}
+ 
+  .selector-row{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+
+  .selector-row label{font-size:10.5px;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.08em;}
+
+  .selector-row select{font-family:inherit;font-size:12.5px;padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink);}
+ 
+  .period-group{display:flex;gap:8px;align-items:flex-end;background:var(--subtle);border:1px solid var(--border);border-radius:8px;padding:8px 12px;}
+
+  .period-group .tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);align-self:center;margin-right:2px;}
+</style>
+</head>
+<body>
+ 
+<header class="topbar">
+<div class="brand">
+<img src="../Guidelines/assets/logo/card-avantaj-symbol-color.png" alt="Card Avantaj">
+<div>
+<div class="name">Loyalty program</div>
+<div class="sub">Card Avantaj</div>
+</div>
+</div>
+<div class="topbar-right">
+<div class="last-available">Last available date: <strong>28 Jul 2026</strong></div>
+<div class="preview-badge">Preview · mock data</div>
+</div>
+</header>
+ 
+<div class="app-body">
+<nav class="sidebar">
+<div class="navgroup-label">Overview</div>
+<button class="navlink active" data-tab="exec">Executive summary</button>
+<button class="navlink" data-tab="financial">Financial impact</button>
+<div class="navgroup-label">Engagement</div>
+<button class="navlink" data-tab="coins">Coins &amp; redemption</button>
+<button class="navlink" data-tab="challenges">Challenges</button>
+<button class="navlink" data-tab="badges">Badges</button>
+<button class="navlink" data-tab="trends">Trends</button>
+<button class="navlink" data-tab="periodcompare">Period comparison</button>
+<div class="navgroup-label">Structure</div>
+<button class="navlink" data-tab="tiers">Tier progression</button>
+<button class="navlink" data-tab="wizz">Wizz reconciliation</button>
+<div class="navgroup-label">Reference</div>
+<button class="navlink" data-tab="glossary">Glossary</button>
+</nav>
+ 
+  <main>
+<div class="filters-row">
+<div class="preset-row">
+<button class="preset-btn active" data-preset="mtd">MTD</button>
+<button class="preset-btn" data-preset="pm">PM</button>
+<button class="preset-btn" data-preset="ytd">YTD</button>
+<button class="preset-btn" data-preset="ltd">LTD</button>
+</div>
+<div class="filter-sep"></div>
+<div class="filter-block"><label>Start month</label><select id="startMonth"></select></div>
+<div class="filter-block"><label>End month</label><select id="endMonth"></select></div>
+<div class="filter-sep"></div>
+<div class="filter-block">
+<label>Tier</label>
+<select id="tierFilter">
+<option value="all">All</option>
+<option>Starter</option>
+<option>Explorer</option>
+<option>Insider</option>
+<option>Elite</option>
+<option>Ambassador</option>
+</select>
+</div>
+<div class="filter-sep"></div>
+<div class="filter-block">
+<label>Product <span class="data-pending" title="Wizz cardholders are identified via a badge-progress proxy that undercounts real Wizz customers — see the Glossary">proxy</span></label>
+<select id="productFilter">
+<option value="all">All</option>
+<option value="cardavantaj">Card Avantaj</option>
+<option value="wizz">Wizz</option>
+</select>
+</div>
+</div>
+ 
+    <!-- ===================== TAB — EXECUTIVE SUMMARY ===================== -->
+<section id="exec" class="tabpage active">
+<div class="tab-eyebrow">Executive summary</div>
+<div class="section-sub" style="margin:-4px 0 18px;">Is the program healthy, working, and profitable — one page, one read. Deep-dive financials live on Financial impact.</div>
+ 
+      <div class="section-title">Key KPIs</div>
+<div class="kpi-grid">
+<div class="kpi-card neutral"><div class="label">Members in program</div><div class="value tabular" id="execKpiMembers">244,934</div><div class="foot">As of 28 Jul 2026</div></div>
+<div class="kpi-card"><div class="label">Engaged members <span class="data-pending" title="Coin balance &gt; 0 shown as a placeholder; the engaged-member definition is not yet finalized — see the Glossary">definition pending</span></div><div class="value tabular" id="execKpiEngaged">150,209</div><div class="foot">As of 28 Jul 2026</div></div>
+<div class="kpi-card warn"><div class="label">Program cost</div><div class="value tabular" id="execKpiCost">403K LEU</div><div class="foot">As of 28 Jul 2026</div></div>
+<div class="kpi-card good"><div class="label">Redemption rate</div><div class="value tabular" id="execKpiRedRate">22%</div><div class="foot" id="execKpiRedRateFoot">MTD</div></div>
+<div class="kpi-card"><div class="label">Coins collected</div><div class="value tabular" id="execKpiColl">1.83M</div><div class="foot" id="execKpiCollFoot">MTD</div></div>
+<div class="kpi-card"><div class="label">Coins redeemed</div><div class="value tabular" id="execKpiRedeem">403K</div><div class="foot" id="execKpiRedeemFoot">MTD</div></div>
+<div class="kpi-card warn"><div class="label">ROI — turnover ratio</div><div class="value tabular" id="execKpiRoi">16%</div><div class="foot" id="execKpiRoiFoot">MTD</div></div>
+<div class="kpi-card pending"><div class="label">ROI — isolated uplift <span class="data-pending">not available</span></div><div class="value tabular">—</div><div class="foot">not period-driven</div></div>
+</div>
+ 
+      <div class="kpi-hero-row">
+<div class="kpi-hero-card">
+<div class="hero-label">Time to progress<br>Starter → Ambassador</div>
+<div class="hero-value tabular">18 mo</div>
+<div class="hero-foot">Full journey · life-to-date · does not respond to filters (monthly-grain data — reported in months, not weeks)</div>
+</div>
+</div>
+ 
+      <div class="section-title">Program snapshot</div>
+<div class="chart-card">
+<h3>Members by tier</h3><div class="desc">Total members vs engaged members, selected period</div>
+<div class="chart-wrap"><canvas id="chOvTiers"></canvas></div>
+</div>
+ 
+      <div class="section-title">Profitability evolution</div>
+<div class="note-banner">Relative to the progression date (month 0), not enrollment — per the proposed <code>TIER_PROGRESSION_IMPACT</code> block. Aggregates across transitions from many calendar dates and is not segmented by product — it does <strong>not</strong> respond to the date, tier or product filters above. Self-selected cohort: an observed pattern, not proof of causation.</div>
+<div class="selector-row">
+<label>Transition</label>
+<select id="progressionSelect">
+<option value="0">Starter → Explorer</option>
+<option value="1">Explorer → Insider</option>
+<option value="2">Insider → Elite</option>
+<option value="3">Elite → Ambassador</option>
+</select>
+<span class="desc" style="margin:0;">Avg. profit per member of the transitioning cohort, by month relative to the progression.</span>
+</div>
+<div class="chart-card full pending">
+<div class="chart-wrap tall"><canvas id="chProgressionImpact"></canvas></div>
+</div>
+</section>
+ 
+    <!-- ===================== TAB — FINANCIAL IMPACT ===================== -->
+<section id="financial" class="tabpage">
+<div class="tab-eyebrow">Financial impact</div>
+<div class="section-sub" style="margin:-4px 0 18px;">Active vs. inactive members, overall and per tier — with the % difference driving the comparison.</div>
+ 
+      <div class="section-title">Profitability: active vs. inactive — overall</div>
+<div class="note-banner">"Active" = engaged (coin balance &gt; 0, definition pending — see Glossary). Members self-select into activity, so this is an <strong>observed difference</strong>, not proof the program caused it.</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Segment</th><th class="num">Members</th><th class="num">Avg. profitability / user / month</th><th class="num">Avg. transactions / user / month</th></tr></thead>
+<tbody id="activeVsInactiveOverallBody"></tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Per-tier financials: active vs. inactive <span class="data-pending">proposed, pending validation</span></div>
+<div class="note-banner">From the proposed <code>TIER_FINANCIALS</code> block — drafted alongside this dashboard, not yet run against real data. Values shown are as of the selected end month. Ambassador has no inactive members in this preview, so its Δ% is not computable.</div>
+<div class="chart-card full pending">
+<table class="datatable">
+<thead><tr>
+<th>Tier</th>
+<th class="num">Active members</th><th class="num">Inactive members</th>
+<th class="num groupsep">Profit (active)</th><th class="num">Profit (inactive)</th><th class="num">Δ%</th>
+<th class="num groupsep">Trx/mo (active)</th><th class="num">Trx/mo (inactive)</th><th class="num">Δ%</th>
+</tr></thead>
+<tbody id="tierFinancialsTableBody"></tbody>
+</table>
+</div>
+</section>
+ 
+    <!-- ===================== TAB — COINS & REDEMPTION ===================== -->
+<section id="coins" class="tabpage">
+<div class="tab-eyebrow">Coins &amp; redemption</div>
+ 
+      <div class="kpi-grid cols-3">
+<div class="kpi-card"><div class="label">Coins earned</div><div class="value tabular" id="coKpiColl">2'456'789K RON</div><div class="foot" id="coKpiCollFoot">MTD</div></div>
+<div class="kpi-card"><div class="label">Coins redeemed</div><div class="value tabular" id="coKpiRedeem">700K RON</div><div class="foot" id="coKpiRedeemFoot">MTD</div></div>
+<div class="kpi-card good"><div class="label">Redemption rate</div><div class="value tabular" id="coKpiRedRate">29%</div><div class="foot" id="coKpiRedRateFoot">MTD</div></div>
+</div>
+ 
+      <div class="charts-grid" style="margin-top:22px;">
+<div class="chart-card"><h3>Total coins collected (thousands RON)</h3><div class="desc">Stacked by tier, Starter → Ambassador</div><div class="chart-wrap tall"><canvas id="chCoinsCollected"></canvas></div></div>
+<div class="chart-card"><h3>Total coins redeemed (thousands RON)</h3><div class="desc">Bars = total redeemed · line = redemption rate %</div><div class="chart-wrap tall"><canvas id="chCoinsRedeemed"></canvas></div></div>
+</div>
+<div class="charts-grid" style="margin-top:18px;">
+<div class="chart-card"><h3>Average Avantaj coins collected per active member</h3><div class="desc">By tier, monthly evolution</div><div class="chart-wrap tall"><canvas id="chCoinsPerMember"></canvas></div></div>
+<div class="chart-card"><h3>Monthly redemption value (RON) distribution per type</h3><div class="desc">Bonus conversion · Pay transactions · Vouchers &amp; experiences</div><div class="chart-wrap tall"><canvas id="chRedemptionByType"></canvas></div></div>
+</div>
+ 
+      <div class="note-banner flag">Flag: the source glossary previously warned against dropping the Reversal/Other redemption categories (it undercounts the true total). This page's category chart now shows only the 3 types in your reference screenshot — worth confirming with your manager whether Reversal/Other should still appear elsewhere, or are being tracked separately going forward.</div>
+<div class="note-banner future">
+<strong style="display:inline;font-size:inherit;">Discount coupons</strong> — future redemption channel, not yet live. <span class="data-pending">not available</span>
+</div>
+</section>
+ 
+    <!-- ===================== TAB — CHALLENGES ===================== -->
+<section id="challenges" class="tabpage">
+<div class="tab-eyebrow">Challenges</div>
+ 
+      <div class="kpi-grid cols-6">
+<div class="kpi-card"><div class="label">Challenges enrolled</div><div class="value tabular" id="chKpiEnrolled">8,235</div><div class="foot">selected period</div></div>
+<div class="kpi-card"><div class="label">Enrolment rate</div><div class="value tabular" id="chKpiEnrollRate">32%</div><div class="foot">selected period</div></div>
+<div class="kpi-card good"><div class="label">Challenges completed</div><div class="value tabular" id="chKpiCompleted">2,078</div><div class="foot">selected period</div></div>
+<div class="kpi-card"><div class="label">Enrolled / person</div><div class="value tabular" id="chKpiEnrolledPerPerson">11.2</div><div class="foot">selected period</div></div>
+<div class="kpi-card good"><div class="label">Completion rate</div><div class="value tabular" id="chKpiCompleteRate">25%</div><div class="foot">selected period</div></div>
+<div class="kpi-card"><div class="label">Completed / person</div><div class="value tabular" id="chKpiCompletedPerPerson">7.8</div><div class="foot">selected period</div></div>
+</div>
+ 
+      <div class="section-title">Average challenges enrolled &amp; completed per member, by tier</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Tier</th><th class="num">Members</th><th class="num">Challenges enrolled</th><th class="num">Enrolment rate</th><th class="num">Avg. enrolled / person</th><th class="num">Challenges completed</th><th class="num">Completion rate</th><th class="num">Avg. completed / person</th><th class="num">Never enrolled</th></tr></thead>
+<tbody id="challengesTierTableBody"></tbody>
+</table>
+</div>
+<div class="note-banner flag">Flag: in your reference screenshot, the per-tier "Completion rate" column exactly duplicated the "Enrolment rate" column (e.g. Starter showed 12% for both). The Total row's own math (2,078 ÷ 8,235 = 25%) doesn't match that pattern, so it reads as a copy-paste artifact upstream. I've recomputed completion rate as Completed ÷ Enrolled per tier below — flag to your manager before this goes further.</div>
+ 
+      <div class="section-title">Month on month evolution</div>
+<div class="chart-card full">
+<div class="selector-row">
+<label>KPI</label>
+<select id="chTrendKpiSelect">
+<option value="ch_enrolled">Challenges enrolled</option>
+<option value="ch_completed">Challenges completed</option>
+<option value="ch_enrolled_pp">Enrolled per person</option>
+<option value="ch_completed_pp" selected>Completed per person</option>
+<option value="ch_enroll_rate">Enrolment rate %</option>
+<option value="ch_complete_rate">Completion rate %</option>
+</select>
+<span class="desc" style="margin:0;">All tiers plotted (unless the master Tier filter above narrows it).</span>
+</div>
+<div class="chart-wrap xtall"><canvas id="chChallengesEvolution"></canvas></div>
+</div>
+ 
+      <div class="section-title">Most popular challenges</div>
+<div class="chart-card full">
+<div class="desc">Click a column header to sort · scroll for the full list, best and worst performers alike</div>
+<div class="table-scroll" id="topChallengesTable">
+<table class="datatable">
+<thead><tr>
+<th class="sortable" data-col="0" onclick="sortTopChallenges(0)">Challenge <span class="arrow"></span></th>
+<th class="sortable num" data-col="1" onclick="sortTopChallenges(1)">Total enrolled <span class="arrow"></span></th>
+<th class="sortable num" data-col="2" onclick="sortTopChallenges(2)">Total completed <span class="arrow"></span></th>
+<th class="sortable num" data-col="3" onclick="sortTopChallenges(3)">Enrolment rate % <span class="arrow"></span></th>
+<th class="sortable num" data-col="4" onclick="sortTopChallenges(4)">Completion rate % <span class="arrow"></span></th>
+</tr></thead>
+<tbody id="topChallengesTableBody"></tbody>
+</table>
+</div>
+</div>
+</section>
+ 
+    <!-- ===================== TAB — BADGES ===================== -->
+<section id="badges" class="tabpage">
+<div class="tab-eyebrow">Badges</div>
+ 
+      <div class="kpi-grid">
+<div class="kpi-card"><div class="label">Badges earned</div><div class="value tabular" id="baKpiEarned">278K</div><div class="foot">selected period</div></div>
+<div class="kpi-card good"><div class="label">Badges per person</div><div class="value tabular" id="baKpiPerPerson">1.14</div><div class="foot">selected period</div></div>
+<div class="kpi-card warn"><div class="label">Customers with no badges</div><div class="value tabular" id="baKpiNoBadges">1,700</div><div class="foot">selected period</div></div>
+<div class="kpi-card warn"><div class="label">Customers with no badges</div><div class="value tabular" id="baKpiNoBadgesPct">1.2%</div><div class="foot">of members, selected period</div></div>
+</div>
+ 
+      <div class="section-title">Average badges collected per member, by tier</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Tier</th><th class="num">Members</th><th class="num">Badges collected</th><th class="num">Avg. badges / member</th><th class="num">Customers with no badges</th><th class="num">%</th></tr></thead>
+<tbody id="badgesTierTableBody"></tbody>
+</table>
+</div>
+<div class="note-banner flag">Flag: your reference screenshot's badges table carried over the Challenges table's numbers verbatim — "Badges collected" matched "Challenges enrolled" exactly (3,294 / 2,306 / 1,482 / 741 / 412), and "Avg. badges/member" showed percentages (12%, 15%…) instead of a per-person count, which doesn't reconcile with the page's own "1.14 badges per person" headline. I've rebuilt this table from the KPI cards and the Month-on-month chart's own end values instead — please confirm the real figures with your data source before this ships.</div>
+ 
+      <div class="section-title">Month on month evolution: average badges per member, by tier</div>
+<div class="chart-card full">
+<div class="desc">All tiers plotted, narrowed by the master Tier filter above.</div>
+<div class="chart-wrap xtall"><canvas id="chBadgesEvolution"></canvas></div>
+</div>
+ 
+      <div class="section-title">Most popular badges</div>
+<div class="chart-card full">
+<div class="desc">Bars = badges collected · line = collection rate %, both filtered by tier &amp; date via the master filters above</div>
+<div class="chart-wrap xtall"><canvas id="chBadgesPopular"></canvas></div>
+</div>
+</section>
+ 
+    <!-- ===================== TAB — TRENDS ===================== -->
+<section id="trends" class="tabpage">
+<div class="tab-eyebrow">Trends</div>
+<div class="section-sub" style="margin:-4px 0 18px;">Pick any engagement KPI and (optionally) narrow by tier above — one clear evolution chart.</div>
+<div class="chart-card full">
+<div class="selector-row">
+<label>KPI</label>
+<select id="trendKpiSelect">
+<option value="coins">Coins collected / engaged member</option>
+<option value="redemption">Redemption rate %</option>
+<option value="ch_enrolled_pp">Challenges enrolled / person</option>
+<option value="ch_completed_pp">Challenges completed / person</option>
+<option value="ch_enroll_rate">Challenge enrolment rate %</option>
+<option value="ch_complete_rate">Challenge completion rate %</option>
+<option value="badges">Badges collected / person</option>
+</select>
+<span class="desc" style="margin:0;">Every tier is plotted (unless the Tier filter above narrows it) — pick a KPI to see how it trends, month over month.</span>
+</div>
+<div class="chart-wrap xtall"><canvas id="chTrendExplorer"></canvas></div>
+</div>
+</section>
+ 
+    <!-- ===================== TAB — PERIOD COMPARISON ===================== -->
+<section id="periodcompare" class="tabpage">
+<div class="tab-eyebrow">Period comparison</div>
+<div class="section-sub" style="margin:-4px 0 18px;">Compare one KPI across two periods and, using the Tier filter above, across tiers.</div>
+ 
+      <div class="chart-card full">
+<div class="selector-row">
+<label>KPI</label>
+<select id="pcKpiSelect">
+<option value="coins">Coins collected / engaged member</option>
+<option value="challenges">Challenges completed / person</option>
+<option value="badges">Badges collected / person</option>
+<option value="redemption">Redemption rate %</option>
+</select>
+</div>
+<div class="selector-row" style="gap:16px;">
+<div class="period-group">
+<span class="tag">Period A</span>
+<div class="filter-block"><label>Start</label><select id="pcAStart"></select></div>
+<div class="filter-block"><label>End</label><select id="pcAEnd"></select></div>
+</div>
+<div class="period-group">
+<span class="tag">Period B</span>
+<div class="filter-block"><label>Start</label><select id="pcBStart"></select></div>
+<div class="filter-block"><label>End</label><select id="pcBEnd"></select></div>
+</div>
+<button class="apply-btn" id="pcApplyBtn" style="background:var(--red);color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">Compare</button>
+</div>
+<div class="chart-wrap tall" style="margin-top:6px;"><canvas id="chPeriodCompare"></canvas></div>
+</div>
+ 
+      <div class="section-title">Detail</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Tier</th><th class="num" id="pcColA">Period A</th><th class="num" id="pcColB">Period B</th><th class="num">Δ abs</th><th class="num">Δ %</th></tr></thead>
+<tbody id="pcTableBody"></tbody>
+</table>
+
+ 
+      </div>
+</section>
+ 
+    <!-- ===================== TAB — TIER PROGRESSION ===================== -->
+<section id="tiers" class="tabpage">
+<div class="tab-eyebrow">Tier progression</div>
+ 
+      <div class="section-title">Key KPIs</div>
+<div class="kpi-grid">
+<div class="kpi-card neutral"><div class="label">Members in program</div><div class="value tabular" id="tierKpiMembers">244,934</div><div class="foot">selected filters</div></div>
+<div class="kpi-card good"><div class="label">Active participants</div><div class="value tabular" id="tierKpiActive">150,209</div><div class="foot" id="tierKpiActivePct">61% of total members</div></div>
+<div class="kpi-card"><div class="label">Avg. time to upgrade 1 tier</div><div class="value tabular">3.5 mo</div><div class="foot">across all transitions, LTD</div></div>
+<div class="kpi-card"><div class="label">Avg. time, Starter to Ambassador</div><div class="value tabular">18 mo</div><div class="foot">full journey, LTD</div></div>
+</div>
+ 
+      <div class="section-title">Tier funnel</div>
+<div class="section-sub">Members = total enrolled in tier · Active members = engaged in the selected period <span class="data-pending">definition pending</span></div>
+<div class="charts-grid">
+<div class="chart-card"><h3>Members vs active members per tier</h3><div class="chart-wrap"><canvas id="chTierMembers"></canvas></div></div>
+<div class="chart-card"><h3>Tier migration (entries vs exits)</h3><div class="desc">Scaled to the selected date range</div><div class="chart-wrap"><canvas id="chTierMigration"></canvas></div></div>
+</div>
+ 
+      <div class="section-title">Tier table</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Tier</th><th class="num">Members</th><th class="num">Active members</th><th class="num">Active rate</th><th class="num">MoM %</th></tr></thead>
+<tbody id="tierTableBody"></tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Time to progression</div>
+<div class="section-sub">"# Users" is life-to-date as of the selected end month</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Transition</th><th class="num"># Users (as of end month)</th><th class="num">Avg. time to progress</th><th class="num">Profitability uplift post-transition</th></tr></thead>
+<tbody id="tierImpactTableBody"></tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Transition timeline</div>
+<div class="chart-card full">
+<div class="chart-wrap"><canvas id="chTierTimeline"></canvas></div>
+</div>
+</section>
+ 
+    <!-- ===================== TAB — WIZZ RECONCILIATION ===================== -->
+<section id="wizz" class="tabpage">
+<div class="tab-eyebrow">Wizz reconciliation</div>
+<div id="wizzNotApplicable" class="note-banner" style="display:none;">Product filter is set to Card Avantaj, which excludes Wizz by definition — this page has nothing to show. Switch Product to All or Wizz.</div>
+<div id="wizzContent">
+<div class="section-title">Collection &amp; redemption</div>
+<div class="section-sub">Wizz co-branded card · cashback rate tiers <span class="data-pending" title="The Wizz cashback rate (1%/2%) does not exist anywhere in the current schema — only Wizz badge progress can identify Wizz cardholders">not available</span></div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Cashback rate</th><th class="num">Net collection (collection minus reversal)</th><th class="num">Redemption</th></tr></thead>
+<tbody id="wizzCollectionTableBody"></tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Challenges and badges</div>
+<div class="chart-card full">
+<h3>Top challenges</h3>
+<div class="desc">Selected date range</div>
+<table class="datatable">
+<thead><tr><th>Challenge</th><th class="num">Participants</th><th class="num">Completed</th><th class="num">Completion rate</th></tr></thead>
+<tbody id="wizzChallengesTableBody"></tbody>
+</table>
+</div>
+<div class="chart-card full" style="margin-top:18px;">
+<h3>Top badges by completion rate</h3>
+<div class="desc">Share of Wizz cardholders completing each badge</div>
+<div class="legend-key">
+<span class="item"><span class="dot" style="background:var(--peach);"></span>Level 1</span>
+<span class="item"><span class="dot" style="background:var(--red-alt);"></span>Level 2</span>
+<span class="item"><span class="dot" style="background:var(--red);"></span>Level 3</span>
+</div>
+<div class="chart-wrap tall"><canvas id="chWizzBadges"></canvas></div>
+</div>
+</div>
+</section>
+ 
+    <!-- ===================== TAB — GLOSSARY ===================== -->
+<section id="glossary" class="tabpage">
+<div class="tab-eyebrow">Glossary</div>
+<div class="note-banner">How every metric on this dashboard is calculated, and what's still an open question. Sourced from <code>loyalty_dashboard_sql/LOY_01_ddl.sql</code>'s column comments and the project README — read this before presenting any number from this dashboard externally.</div>
+ 
+      <div class="section-title">Page structure &amp; this revision's changes</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Term</th><th>How it's calculated</th></tr></thead>
+<tbody>
+<tr><td class="term">Member base refresh</td><td>Members in program moved from 318,410 to 244,934 (and Active from 177,106 to 150,209) to match your manager's reference screenshots. Every downstream figure — tier splits, financial ratios, challenge/badge tables — was rebuilt from this new base, not just the headline cards.</td></tr>
+<tr><td class="term">Tier order</td><td>Coins &amp; redemption, Challenges and Badges now list tiers Starter → Ambassador (ascending, matching your manager's screenshots). Tier progression and Financial impact keep Ambassador → Starter (descending) as before.</td></tr>
+<tr><td class="term">Active vs. Engaged</td><td>Financial impact and Tier progression now say "Active"; Executive summary, Coins &amp; redemption, Challenges and Badges still say "Engaged." Same underlying placeholder definition (coin balance &gt; 0) — the wording split follows your manager's screenshots, not a new metric.</td></tr>
+<tr><td class="term">Challenges vs. Badges</td><td>Split into two tabs (previously one "Challenges &amp; badges" tab). Both still respond to the master Tier filter and date pickers.</td></tr>
+<tr><td class="term">Trends</td><td>Trimmed to a single chart per your manager's note. KPI list expanded to cover challenge and badge rates, not just coins/challenges/badges/redemption as before.</td></tr>
+</tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Membership &amp; engagement</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Term</th><th>How it's calculated</th></tr></thead>
+<tbody>
+<tr><td class="term">Members in program</td><td>Count of profiles present in both the Talon.One loyalty feed and Cust_360 (<code>LOY_MEMBER</code>). The figure shown here is an illustrative preview value, not the real reconciled count — see <code>loyalty_dashboard_sql/README.md</code> for the actual validated figure.</td></tr>
+<tr><td class="term">Engaged / Active members</td><td><span class="data-pending">definition pending</span> — this dashboard uses coin balance &gt; 0 (<code>member_with_balance_cnt</code>) as a placeholder. The figure shown is illustrative, not the real reconciled count. Do not treat as final.</td></tr>
+<tr><td class="term">Tier</td><td>Effective-dated per customer (<code>LOY_TIER_HIST</code>) — one row per tier <em>change</em>, not per day. Five tiers, Starter through Ambassador.</td></tr>
+<tr><td class="term">MoM %</td><td>Month-over-month change in active member count for that tier.</td></tr>
+<tr><td class="term">Time to progress, Starter → Ambassador</td><td>Full-journey average across all customers who have completed it, life-to-date. Reported in months only — the source data (<code>LOY_TIER_HIST</code>) is monthly-grain, so a weeks figure would be false precision.</td></tr>
+</tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Coins &amp; program cost</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Term</th><th>How it's calculated</th></tr></thead>
+<tbody>
+<tr><td class="term">Coins collected / redeemed</td><td>Summed from <code>LOY_TRANSACTION</code>, split by <code>flow_type</code> (EARN / REDEEM), attributed to the customer's tier at the transaction date.</td></tr>
+<tr><td class="term">Redemption rate</td><td>Shown as an independent illustrative monthly series, not derived by dividing the redeemed and collected series on this page — matches how the rest of this mock's "anchor figures" are deliberately fresh, not cross-computed. Worth reconciling once real data lands.</td></tr>
+<tr><td class="term">Program cost</td><td>Coins redeemed × 1 LEU. <strong>1 redeemed coin = 1 LEU</strong> is the confirmed conversion — no separate exchange rate applies.</td></tr>
+<tr><td class="term">Redemption categories</td><td>This revision shows 3 categories (Bonus conversion, Pay transactions, Vouchers &amp; experiences) per your manager's screenshot — see the flag banner on the Coins &amp; redemption page regarding the previously-documented Reversal/Other categories.</td></tr>
+</tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Challenges &amp; badges</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Term</th><th>How it's calculated</th></tr></thead>
+<tbody>
+<tr><td class="term">Completion rate</td><td>From <code>LOY_ACHIEVEMENT.is_completed</code>, derived from <code>STATUS = 'completed'</code> — never from a completion date, which is populated on in-progress and expired rows too.</td></tr>
+<tr><td class="term">Start cohort</td><td>Challenge and badge trends are read as "of challenges started in month X, Y% eventually completed" — <strong>not</strong> "Y% completed in month X." Completion timing is not recorded in the source.</td></tr>
+<tr><td class="term">Badge level 1</td><td>Excluded from the badges list — it is auto-awarded on enrollment and always shows 100% completion. Only levels 2 and 3 are shown.</td></tr>
+<tr><td class="term">Most popular challenges</td><td>Sortable by any column, scrollable — the full list, not a top-N cut. Default sort is descending by total enrolled; click a header to change it.</td></tr>
+<tr><td class="term">Most popular badges</td><td>Rebuilt as a combined bar (collected) + line (collection rate %) chart, matching your manager's screenshot — a fixed 8-badge list, no scroll needed at this size.</td></tr>
+</tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Profitability &amp; ROI</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Term</th><th>How it's calculated</th></tr></thead>
+<tbody>
+<tr><td class="term">Active vs. inactive</td><td>Replaces the earlier "Loyalty vs. non-loyalty" framing on Financial impact. Members self-select into activity, so this is an <strong>observed difference</strong>, not causal uplift. Δ% = (Active − Inactive) ÷ Inactive.</td></tr>
+<tr><td class="term">ROI — turnover ratio</td><td>Total turnover generated ÷ coins collected. Available today from existing data.</td></tr>
+<tr><td class="term">ROI — isolated uplift</td><td><span class="data-pending">not available</span> — incremental profit of tier-progressors vs a matched non-progressor baseline, divided by program cost. Depends on the proposed <code>TIER_PROGRESSION_IMPACT</code> block being validated first.</td></tr>
+<tr><td class="term">Per-tier financials</td><td><span class="data-pending">proposed, pending validation</span> — active vs. inactive avg. profit and avg. transactions/month per tier, from the proposed <code>TIER_FINANCIALS</code> block.</td></tr>
+<tr><td class="term">Tier progression impact</td><td><span class="data-pending">proposed, pending validation</span> — average profit of a transitioning cohort, by month relative to the transition (month 0 = the transition itself). Self-selected cohort: an observed pattern, not proof of causation. Aggregates across transitions from many calendar dates, so it does not respond to the date filter, and is not segmented by product.</td></tr>
+</tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Filters, snapshot vs. responsive</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Term</th><th>How it's calculated</th></tr></thead>
+<tbody>
+<tr><td class="term">Date filter</td><td>Stock measures (member counts, balances) take the value <strong>as of the selected end month</strong>. Flow measures (coins collected/redeemed, transactions, challenges/badges) <strong>sum over</strong> the selected range. Same rule the SQL layer itself follows.</td></tr>
+<tr><td class="term">Executive Summary KPI strip</td><td>Deliberately frozen to the latest available date regardless of the date filter (still responds to Product) — a stable headline number safe to quote, distinct from the rest of the page which explores the selected period.</td></tr>
+<tr><td class="term">Tier filter</td><td>Narrows per-tier charts/tables to the selected tier. "All" shows every tier. Applies on Coins &amp; redemption, Challenges and Badges as well as Financial impact and Tier progression.</td></tr>
+<tr><td class="term">Product filter</td><td>Reslices members, coins, challenges and per-tier financials using the Wizz-badge-proxy split described above. Member/balance counts specifically are <strong>not</strong> segmentable this way yet (see Product identification below) — those figures stay at their All-product value regardless of this filter, and are labeled accordingly where it matters.</td></tr>
+</tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Product identification (Wizz vs Card Avantaj)</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Term</th><th>How it's calculated</th></tr></thead>
+<tbody>
+<tr><td class="term">Wizz cardholder (proxy)</td><td>The <strong>only</strong> Wizz signal anywhere in the schema is progress on one of the 7 Wizz-branded badges — <code>PROD_NAME</code> has no Wizz product, and <code>CARD_TYPE</code> is null on 86% of cards. <code>LOY_MEMBER.is_wizz_proxy</code> flags a customer as Wizz if they have any Wizz badge progress. This <strong>undercounts</strong>: a Wizz cardholder who has never touched a Wizz badge is invisible to it.</td></tr>
+<tr><td class="term">product_segment</td><td><span class="data-pending">proposed, pending validation</span> — ALL / WIZZ / CARD_AVANTAJ, populated on TIER (flow measures only), REDEMPTION_CAT, CHALLENGE, TIER_FINANCIALS. Not yet populated on BADGE, WIZZ_BADGE (already split via grain_type itself), TIER_MIGRATION or TIER_PROGRESSION_IMPACT.</td></tr>
+<tr><td class="term">Why member counts aren't segmented</td><td>Member and balance counts come from a pre-aggregated daily table (<code>LOY_BALANCE_DAY</code>) built with an optimized delta+running-sum computation specifically because per-customer daily balance summation at scale is expensive. Segmenting it by product would mean redoing that computation once per segment — a real cost, not attempted in this pass.</td></tr>
+<tr><td class="term">Wizz cashback rate</td><td><span class="data-pending">not available</span> — the 1%/2% cashback rate referenced on the Wizz reconciliation page does not exist anywhere in the current schema.</td></tr>
+</tbody>
+</table>
+</div>
+ 
+      <div class="section-title">Known gaps</div>
+<div class="chart-card full">
+<table class="datatable">
+<thead><tr><th>Gap</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td class="term">App usage</td><td><span class="data-pending">no data source yet</span> — no dated app-engagement data exists in Oracle.</td></tr>
+<tr><td class="term">Downstream impact</td><td><span class="data-pending">not available</span> — becomes available once challenges/badges are joined to transactions and app usage.</td></tr>
+<tr><td class="term">Discount coupons</td><td><span class="data-pending">not available</span> — a future redemption channel, not yet live.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+ 
+  </main>
+</div>
+ 
+<script>
+
+/* ================= Tab navigation ================= */
+
+function setActiveTab(tabId){
+
+  document.querySelectorAll('.navlink').forEach(b=>b.classList.remove('active'));
+
+  document.querySelectorAll('.tabpage').forEach(p=>p.classList.remove('active'));
+
+  const btn = document.querySelector(`.navlink[data-tab="${tabId}"]`);
+
+  if(btn) btn.classList.add('active');
+
+  document.getElementById(tabId).classList.add('active');
+
+}
+
+document.querySelectorAll('.navlink').forEach(btn=>{
+
+  btn.addEventListener('click', ()=> setActiveTab(btn.dataset.tab));
+
+});
+ 
+/* ================= Month range slicers + presets ================= */
+
+const MONTHS=['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07'];
+
+const startSel=document.getElementById('startMonth'), endSel=document.getElementById('endMonth');
+
+const tierFilterSel=document.getElementById('tierFilter'), productFilterSel=document.getElementById('productFilter');
+
+MONTHS.forEach(m=>{ startSel.innerHTML+=`<option value="${m}">${m}</option>`; endSel.innerHTML+=`<option value="${m}">${m}</option>`; });
+
+startSel.value=MONTHS[MONTHS.length-1]; endSel.value=MONTHS[MONTHS.length-1];
+ 
+document.querySelectorAll('.preset-btn').forEach(btn=>{
+
+  btn.addEventListener('click', ()=>{
+
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+
+    btn.classList.add('active');
+
+    const last=MONTHS.length-1;
+
+    if(btn.dataset.preset==='mtd'){ startSel.value=MONTHS[last]; endSel.value=MONTHS[last]; }
+
+    if(btn.dataset.preset==='pm'){ startSel.value=MONTHS[last-1]; endSel.value=MONTHS[last-1]; }
+
+    if(btn.dataset.preset==='ytd'){ startSel.value=MONTHS[6]; endSel.value=MONTHS[last]; }
+
+    if(btn.dataset.preset==='ltd'){ startSel.value=MONTHS[0]; endSel.value=MONTHS[last]; }
+
+    refreshAll();
+
+  });
+
+});
+
+[startSel,endSel].forEach(s=>s.addEventListener('change', ()=>{
+
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+
+  refreshAll();
+
+}));
+
+tierFilterSel.addEventListener('change', ()=>{
+
+  tierFilterSel.classList.toggle('filter-active', tierFilterSel.value !== 'all');
+
+  refreshAll();
+
+});
+
+productFilterSel.addEventListener('change', ()=>{
+
+  productFilterSel.classList.toggle('filter-active', productFilterSel.value !== 'all');
+
+  refreshAll();
+
+});
+ 
+/* ================= Formatting helpers ================= */
+
+function fmtNum(v){
+
+  const sign = v<0 ? '-' : ''; const a = Math.abs(v);
+
+  const trim = n => { const r = Math.round(n*10)/10; return Number.isInteger(r) ? r.toString() : r.toFixed(1); };
+
+  if(a>=1e9) return sign+trim(a/1e9)+'B';
+
+  if(a>=1e6) return sign+trim(a/1e6)+'M';
+
+  if(a>=1e3) return sign+trim(a/1e3)+'K';
+
+  return sign+trim(a);
+
+}
+
+function fmtPct(v){ return Math.round(v)+'%'; }
+
+function fmtK(v){ return Math.round(v)+'K'; }
+ 
+/* ================= Chart-wide theme ================= */
+
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+const INK=cssVar('--ink'), MUTED=cssVar('--chart-muted'), GRID=cssVar('--chart-grid');
+
+const RED=cssVar('--red'), REDALT=cssVar('--red-alt'), ORANGERED=cssVar('--orange-red'), ORANGE=cssVar('--orange'), PEACH=cssVar('--peach');
+
+const GREEN='#1F6B52', VIOLET='#4A3D8F', TOTAL='#5C3D2E', NEUTRAL_BAR='#D8CCC3';
+ 
+Chart.register(ChartDataLabels);
+
+Chart.defaults.font.family="Geologica, Arial, 'Segoe UI', system-ui, sans-serif"; Chart.defaults.color=MUTED; Chart.defaults.font.size=11.5;
+
+Chart.defaults.plugins.datalabels.display=false;
+
+Chart.defaults.plugins.legend.labels.boxWidth=10;
+
+Chart.defaults.plugins.legend.labels.boxHeight=10;
+
+Chart.defaults.plugins.tooltip.backgroundColor='rgba(28,14,12,0.94)';
+
+Chart.defaults.plugins.tooltip.cornerRadius=8;
+
+Chart.defaults.plugins.tooltip.padding=14;
+ 
+function valueAxis(){ return { grid:{color:GRID, drawTicks:false}, border:{display:false}, ticks:{display:false} }; }
+
+function valueAxisTicks(formatter){ return { grid:{color:GRID, drawTicks:false}, border:{display:false}, ticks:{callback:formatter, maxTicksLimit:5} }; }
+
+function catAxis(){ return { grid:{display:false}, border:{display:false} }; }
+
+function dl(formatter, opts={}){ return { display:true, color:INK, font:{weight:600,size:10.5}, formatter, ...opts }; }
+
+function ramp(end, n, floor){ floor = floor===undefined?0.05:floor; return Array.from({length:n},(_,i)=> Math.round(end*(floor+(1-floor)*i/(n-1))*100)/100); }
+ 
+// Descending order (Ambassador..Starter) -- used by Tier progression & Financial impact
+
+const TIERS=['Ambassador','Elite','Insider','Explorer','Starter'];
+
+const TIER_COLORS=[RED,REDALT,ORANGERED,ORANGE,PEACH];
+
+// Ascending order (Starter..Ambassador) -- used by Coins & redemption, Challenges, Badges,
+
+// matching the manager's reference screenshots.
+
+const TIERS_ASC=['Starter','Explorer','Insider','Elite','Ambassador'];
+
+const TIER_COLORS_ASC=[PEACH,ORANGE,ORANGERED,REDALT,RED];
+ 
+// Member base refreshed to match the manager's screenshots (was 318,410 / 177,106).
+
+const MEMBERS=[51,3419,11510,32690,197264];       // Ambassador..Starter
+
+const ACTIVE=[51,3389,11340,31094,104335];        // Ambassador..Starter
+
+const WIZZ_SHARE=[0.031,0.044,0.061,0.052,0.048]; // Wizz-badge-proxy share per tier (illustrative)
+
+const TIER_SHARE=[0.62,0.155,0.10,0.075,0.05];    // Starter..Ambassador order, used for coin-stack splits
+ 
+/* ================= Filter state helpers (shared by every tab) ================= */
+
+function filterState(){
+
+  const s = MONTHS.indexOf(startSel.value), e = MONTHS.indexOf(endSel.value);
+
+  const lo = Math.min(s,e), hi = Math.max(s,e);
+
+  return {
+
+    lo, hi,
+
+    endFrac: 0.05 + 0.95 * ((hi+1)/MONTHS.length),
+
+    rangeFrac: (hi-lo+1)/MONTHS.length,
+
+    product: productFilterSel.value,
+
+    tier: tierFilterSel.value
+
+  };
+
+}
+
+function productMultiplier(tierIdx, product){
+
+  if(product==='wizz') return WIZZ_SHARE[tierIdx];
+
+  if(product==='cardavantaj') return 1-WIZZ_SHARE[tierIdx];
+
+  return 1;
+
+}
+
+function tierIndices(tierFilter){
+
+  if(tierFilter==='all') return TIERS.map((t,i)=>i);
+
+  const idx = TIERS.indexOf(tierFilter);
+
+  return idx>=0 ? [idx] : TIERS.map((t,i)=>i);
+
+}
+
+// Same as tierIndices but returns indices into the ASCENDING (Starter-first) arrays.
+
+function tierIndicesAsc(tierFilter){
+
+  if(tierFilter==='all') return TIERS_ASC.map((t,i)=>i);
+
+  const idx = TIERS_ASC.indexOf(tierFilter);
+
+  return idx>=0 ? [idx] : TIERS_ASC.map((t,i)=>i);
+
+}
+
+function pick(arr, idxs){ return idxs.map(i=>arr[i]); }
+ 
+function periodLabel(){
+
+  const activeBtn = document.querySelector('.preset-btn.active');
+
+  if(activeBtn) return activeBtn.dataset.preset.toUpperCase();
+
+  return startSel.value===endSel.value ? startSel.value : `${startSel.value} → ${endSel.value}`;
+
+}
+ 
+/* ================= Chart instances ================= */
+
+let chOvTiers, chCoinsCollected, chCoinsRedeemed, chCoinsPerMember, chRedemptionByType,
+
+    chChallengesEvolution, chBadgesEvolution, chBadgesPopular,
+
+    chTrendExplorer, chTierMembers, chTierMigration, chTierTimeline, chProgressionImpact, chWizzBadges, chPeriodCompare;
+ 
+/* ================= Executive Summary ================= */
+
+function initExecCharts(){
+
+  chOvTiers=new Chart(document.getElementById('chOvTiers'),{type:'bar',data:{labels:TIERS,datasets:[
+
+    {label:'Members',data:MEMBERS.slice(),backgroundColor:NEUTRAL_BAR,datalabels:dl(v=>fmtNum(v.raw??v),{anchor:'end',align:'end'})},
+
+    {label:'Engaged members',data:ACTIVE.slice(),backgroundColor:RED,datalabels:dl(v=>fmtNum(v.raw??v),{anchor:'end',align:'end'})}
+
+  ]},options:{scales:{x:catAxis(),y:valueAxis()},plugins:{legend:{position:'bottom'},datalabels:{display:true,formatter:v=>fmtNum(v),color:INK,font:{weight:600,size:10},anchor:'end',align:'end'}}}});
+
+}
+ 
+function refreshExecTab(fs){
+
+  document.getElementById('execKpiMembers').textContent = MEMBERS.reduce((a,b)=>a+b,0).toLocaleString();
+
+  document.getElementById('execKpiEngaged').textContent = ACTIVE.reduce((a,b)=>a+b,0).toLocaleString();
+
+  document.getElementById('execKpiCost').textContent = '403K LEU';
+ 
+  const period = periodLabel();
+
+  ['execKpiRedRateFoot','execKpiCollFoot','execKpiRedeemFoot','execKpiRoiFoot'].forEach(id=>{
+
+    document.getElementById(id).textContent = period;
+
+  });
+
+  const idxs = tierIndices(fs.tier);
+
+  const {coll, red} = coinsForRange(idxs, fs.lo, fs.hi, fs.product);
+
+  document.getElementById('execKpiColl').textContent = fmtK(coll);
+
+  document.getElementById('execKpiRedeem').textContent = fmtK(red);
+
+  document.getElementById('execKpiRedRate').textContent = coll>0 ? fmtPct(100*red/coll) : '--';
+
+  document.getElementById('execKpiRoi').textContent = coll>0 ? '16%' : '--';
+ 
+  const memberSlice = idxs.map(i=>Math.round(MEMBERS[i]*fs.endFrac));
+
+  const activeSlice = idxs.map(i=>Math.round(ACTIVE[i]*fs.endFrac));
+
+  chOvTiers.data.labels = pick(TIERS, idxs);
+
+  chOvTiers.data.datasets[0].data = memberSlice;
+
+  chOvTiers.data.datasets[1].data = activeSlice;
+
+  chOvTiers.update();
+
+}
+ 
+function coinsForRange(idxs, lo, hi, product){
+
+  let coll=0, red=0;
+
+  idxs.forEach(i=>{
+
+    const mult = productMultiplier(i, product);
+
+    const tierShare=TIER_SHARE[TIERS.length-1-i];
+
+    for(let m=lo;m<=hi;m++){
+
+      coll += COLLECTED_M[m]*tierShare*mult;
+
+      red  += REDEEMED_M[m]*tierShare*mult;
+
+    }
+
+  });
+
+  return {coll, red};
+
+}
+ 
+/* ---- Profitability evolution chart: snapshot, does not respond to filters ---- */
+
+const RELATIVE_MONTHS=['-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5','+6'];
+
+const PROGRESSIONS=[
+
+  {label:'Starter → Explorer', base:2.4, uplift:0.35},
+
+  {label:'Explorer → Insider', base:6.8, uplift:0.42},
+
+  {label:'Insider → Elite',    base:15.5,uplift:0.55},
+
+  {label:'Elite → Ambassador', base:42.0,uplift:0.68},
+
+];
+
+function progressionSeries(p){
+
+  return RELATIVE_MONTHS.map(m=>{
+
+    const rel=parseInt(m,10);
+
+    const u = rel<0 ? 0 : p.uplift*(1-Math.exp(-rel/3));
+
+    return Math.round(p.base*(1+u)*100)/100;
+
+  });
+
+}
+
+function buildProgressionChart(idx){
+
+  const p=PROGRESSIONS[idx];
+
+  const data={labels:RELATIVE_MONTHS,datasets:[{label:'Avg. profit / member ('+p.label+')',data:progressionSeries(p),borderColor:ORANGERED,backgroundColor:'rgba(242,93,39,.12)',fill:true,tension:.3,pointBackgroundColor:RELATIVE_MONTHS.map(m=>m==='0'?RED:ORANGERED),pointRadius:RELATIVE_MONTHS.map(m=>m==='0'?5:3)}]};
+
+  if(chProgressionImpact){ chProgressionImpact.data=data; chProgressionImpact.update(); }
+
+  else{
+
+    chProgressionImpact=new Chart(document.getElementById('chProgressionImpact'),{type:'line',data,
+
+      options:{scales:{x:catAxis(),y:valueAxisTicks(fmtNum)},plugins:{legend:{display:false},tooltip:{callbacks:{label:(ctx)=>`Month ${ctx.label}: ${ctx.raw} avg. profit/member`}}}}});
+
+  }
+
+}
+ 
+/* ================= Financial Impact — Active vs Inactive ================= */
+
+const FIN_TFBASE=[ // Ambassador..Starter -- active-side profit/trx, reused from prior per-tier financials
+
+  ['Ambassador',42.0,7.9],
+
+  ['Elite',15.5,5.1],
+
+  ['Insider',6.8,4.0],
+
+  ['Explorer',4.1,3.5],
+
+  ['Starter',2.4,3.1],
+
+];
+
+const FIN_INACTIVE_PROFIT_RATIO=0.28, FIN_INACTIVE_TRX_RATIO=0.35;
+ 
+function refreshFinancialTab(fs){
+
+  const idxs = tierIndices(fs.tier);
+
+  const prodMult = fs.product==='wizz' ? 1.08 : fs.product==='cardavantaj' ? 0.995 : 1.0;
+ 
+  // ---- Overall Active vs Inactive ----
+
+  const activeMembers = idxs.reduce((s,i)=>s+ACTIVE[i],0);
+
+  const inactiveMembers = idxs.reduce((s,i)=>s+(MEMBERS[i]-ACTIVE[i]),0);
+
+  const activeProfit = 132*prodMult, inactiveProfit = 38*prodMult;
+
+  const activeTrx = 5.8, inactiveTrx = 2.1;
+
+  const rows=[
+
+    ['Active', activeMembers.toLocaleString(), activeProfit.toFixed(1), activeTrx.toFixed(1)],
+
+    ['Inactive', inactiveMembers.toLocaleString(), inactiveProfit.toFixed(1), inactiveTrx.toFixed(1)],
+
+  ];
+
+  const profitDelta = ((activeProfit-inactiveProfit)/inactiveProfit*100).toFixed(0);
+
+  const trxDelta = ((activeTrx-inactiveTrx)/inactiveTrx*100).toFixed(0);
+
+  document.getElementById('activeVsInactiveOverallBody').innerHTML = rows.map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join('')
+
+    + `<tr class="total-row"><td>Δ% (Active vs Inactive)</td><td class="num">—</td><td class="num" style="color:var(--green);">+${profitDelta}%</td><td class="num" style="color:var(--green);">+${trxDelta}%</td></tr>`;
+ 
+  // ---- Per-tier Active vs Inactive ----
+
+  const tfRows = idxs.map(i=>{
+
+    const [label, activeProfitT, activeTrxT] = FIN_TFBASE[i];
+
+    const activeM = ACTIVE[i], inactiveM = MEMBERS[i]-ACTIVE[i];
+
+    const ap = activeProfitT*prodMult, at = activeTrxT;
+
+    if(inactiveM===0){
+
+      return `<tr><td>${label}</td><td class="num">${activeM.toLocaleString()}</td><td class="num">0</td>
+<td class="num groupsep">${ap.toFixed(1)}</td><td class="num">—</td><td class="num">—</td>
+<td class="num groupsep">${at.toFixed(1)}</td><td class="num">—</td><td class="num">—</td></tr>`;
+
+    }
+
+    const ip = ap*FIN_INACTIVE_PROFIT_RATIO, it = at*FIN_INACTIVE_TRX_RATIO;
+
+    const pd = ((ap-ip)/ip*100).toFixed(0), td = ((at-it)/it*100).toFixed(0);
+
+    return `<tr><td>${label}</td><td class="num">${activeM.toLocaleString()}</td><td class="num">${inactiveM.toLocaleString()}</td>
+<td class="num groupsep">${ap.toFixed(1)}</td><td class="num">${ip.toFixed(1)}</td><td class="num" style="color:var(--green);">+${pd}%</td>
+<td class="num groupsep">${at.toFixed(1)}</td><td class="num">${it.toFixed(1)}</td><td class="num" style="color:var(--green);">+${td}%</td></tr>`;
+
+  });
+
+  document.getElementById('tierFinancialsTableBody').innerHTML = tfRows.join('');
+
+}
+ 
+/* ================= Coins & Redemption (per manager screenshot) ================= */
+
+// 13-month series -- first 12 values read directly off the screenshot (25-Jul..26-Jun),
+
+// 13th (26-Jul) extrapolated to keep this in step with the shared MONTHS array.
+
+const COLLECTED_M=[650,649,943,829,670,824,1078,1127,1369,1810,1262,1262,1300];
+
+const REDEEMED_M=[367,343,559,439,396,405,586,526,742,871,674,585,610];
+
+const REDEMPTION_RATE_M=[7,8,7,9,12,13,15,16,17,17,19,22,23]; // shown as its own illustrative series, see Glossary
+
+const COINS_PER_MEMBER_END=[1756,409,130,70,40]; // Ambassador..Starter, end-of-period avg coins/active member
+
+const COINS_PER_MEMBER_SERIES = TIERS.map((t,i)=>ramp(COINS_PER_MEMBER_END[i], MONTHS.length, 0.06));
+
+const REDEMPTION_TYPE_SPLIT=[
+
+  {name:'Bonus conversion', share:0.45, color:ORANGE},
+
+  {name:'Pay transactions', share:0.35, color:PEACH},
+
+  {name:'Vouchers & experiences', share:0.20, color:TOTAL},
+
+];
+ 
+function initCoinsCharts(){
+
+  chCoinsCollected=new Chart(document.getElementById('chCoinsCollected'),{type:'bar',data:{labels:MONTHS,datasets:[]},
+
+    options:{scales:{x:{...catAxis(),stacked:true},y:{...valueAxisTicks(fmtK),stacked:true}},plugins:{legend:{position:'bottom'}}}});
+ 
+  chCoinsRedeemed=new Chart(document.getElementById('chCoinsRedeemed'),{data:{labels:MONTHS,datasets:[
+
+    {type:'bar',label:'Total redeemed',data:REDEEMED_M.slice(),backgroundColor:ORANGE,
+
+      datalabels:{display:true,formatter:v=>fmtK(v),color:INK,font:{weight:600,size:9.5},anchor:'end',align:'end'}},
+
+    {type:'line',label:'Redemption rate %',data:REDEMPTION_RATE_M.slice(),borderColor:INK,backgroundColor:INK,borderWidth:2,pointRadius:3,tension:.3,yAxisID:'y1',
+
+      datalabels:{display:true,formatter:v=>v+'%',color:INK,font:{weight:700,size:9.5},align:'top',anchor:'end'}}
+
+  ]},options:{scales:{x:catAxis(),y:{...valueAxisTicks(fmtK)},y1:{position:'right',grid:{display:false},ticks:{callback:v=>v+'%'},min:0,max:30}},plugins:{legend:{position:'bottom'}}}});
+ 
+  chCoinsPerMember=new Chart(document.getElementById('chCoinsPerMember'),{type:'line',data:{labels:MONTHS,datasets:TIERS.map((t,i)=>({
+
+    label:t, data:COINS_PER_MEMBER_SERIES[i].slice(), borderColor:TIER_COLORS[i], backgroundColor:'transparent', tension:.3
+
+  }))},options:{scales:{x:catAxis(),y:valueAxisTicks(fmtNum)},plugins:{legend:{position:'bottom'}}}});
+ 
+  chRedemptionByType=new Chart(document.getElementById('chRedemptionByType'),{type:'bar',data:{labels:MONTHS,datasets:
+
+    REDEMPTION_TYPE_SPLIT.map(c=>({label:c.name,data:REDEEMED_M.map(v=>Math.round(v*c.share)),backgroundColor:c.color}))
+
+  },options:{scales:{x:{...catAxis(),stacked:true},y:{...valueAxisTicks(fmtK),stacked:true}},plugins:{legend:{position:'bottom'},
+
+    datalabels:{display:true,formatter:(v,ctx)=>{const total=REDEEMED_M[ctx.dataIndex];return total>0?Math.round(v/total*100)+'%':'';},color:'#fff',font:{weight:700,size:9}}}}});
+
+}
+ 
+function refreshCoinsTab(fs){
+
+  const idxsAsc = tierIndicesAsc(fs.tier);
+
+  const period = periodLabel();
+
+  ['coKpiCollFoot','coKpiRedeemFoot','coKpiRedRateFoot'].forEach(id=>document.getElementById(id).textContent=period);
+ 
+  let coll=0, red=0;
+
+  idxsAsc.forEach(ai=>{
+
+    const i = TIERS.length-1-ai; // map ascending index to the descending MEMBERS/ACTIVE arrays
+
+    const mult = productMultiplier(i, fs.product);
+
+    for(let m=fs.lo;m<=fs.hi;m++){ coll += COLLECTED_M[m]*TIER_SHARE[ai]*mult; red += REDEEMED_M[m]*TIER_SHARE[ai]*mult; }
+
+  });
+
+  document.getElementById('coKpiColl').textContent = fmtK(coll)+' RON';
+
+  document.getElementById('coKpiRedeem').textContent = fmtK(red)+' RON';
+
+  document.getElementById('coKpiRedRate').textContent = coll>0 ? fmtPct(100*red/coll) : '--';
+ 
+  chCoinsCollected.data.labels = MONTHS.slice(fs.lo,fs.hi+1);
+
+  chCoinsCollected.data.datasets = idxsAsc.map(ai=>({
+
+    label:TIERS_ASC[ai],
+
+    data: COLLECTED_M.slice(fs.lo,fs.hi+1).map(v=>Math.round(v*TIER_SHARE[ai]*productMultiplier(TIERS.length-1-ai,fs.product))),
+
+ 
+    backgroundColor:TIER_COLORS_ASC[ai]
+
+  }));
+
+  chCoinsCollected.update();
+ 
+  chCoinsRedeemed.data.labels = MONTHS.slice(fs.lo,fs.hi+1);
+
+  chCoinsRedeemed.data.datasets[0].data = REDEEMED_M.slice(fs.lo,fs.hi+1);
+
+  chCoinsRedeemed.data.datasets[1].data = REDEMPTION_RATE_M.slice(fs.lo,fs.hi+1);
+
+  chCoinsRedeemed.update();
+ 
+  chCoinsPerMember.data.labels = MONTHS.slice(fs.lo,fs.hi+1);
+
+  chCoinsPerMember.data.datasets = tierIndices(fs.tier).map(i=>({
+
+    label:TIERS[i], data:COINS_PER_MEMBER_SERIES[i].slice(fs.lo,fs.hi+1).map(v=>Math.round(v*productMultiplier(i,fs.product)*10)/10),
+
+    borderColor:TIER_COLORS[i], backgroundColor:'transparent', tension:.3
+
+  }));
+
+  chCoinsPerMember.update();
+ 
+  chRedemptionByType.data.labels = MONTHS.slice(fs.lo,fs.hi+1);
+
+  chRedemptionByType.data.datasets.forEach((ds,ci)=>{
+
+    ds.data = REDEEMED_M.slice(fs.lo,fs.hi+1).map(v=>Math.round(v*REDEMPTION_TYPE_SPLIT[ci].share));
+
+  });
+
+  chRedemptionByType.update();
+
+}
+ 
+/* ================= Challenges (separate tab) ================= */
+
+// Corrected per-tier table: completion rate recomputed as Completed / Enrolled
+
+// (screenshot had it duplicating the enrolment-rate column -- see the flag banner).
+
+const CH_TABLE_ASC=[ // Starter..Ambassador
+
+  {tier:'Starter',   members:197264, enrolled:3294, enrollRate:12, avgEnroll:8,  completed:628, avgComplete:4,  neverPct:100},
+
+  {tier:'Explorer',  members:32690,  enrolled:2306, enrollRate:15, avgEnroll:10, completed:538, avgComplete:4,  neverPct:50},
+
+  {tier:'Insider',   members:11510,  enrolled:1482, enrollRate:24, avgEnroll:17, completed:440, avgComplete:9,  neverPct:25},
+
+  {tier:'Elite',     members:3419,   enrolled:741,  enrollRate:38, avgEnroll:15, completed:275, avgComplete:10, neverPct:4},
+
+  {tier:'Ambassador',members:51,     enrolled:412,  enrollRate:42, avgEnroll:22, completed:197, avgComplete:12, neverPct:0},
+
+];
+
+// Trend end-values (Ambassador..Starter, to match TIERS order) for the local KPI selector
+
+const CH_ENROLLED_END=[412,741,1482,2306,3294];
+
+const CH_COMPLETED_END=[197,275,440,538,628];
+
+const CH_ENROLLED_PP_END=[22,15,17,10,8];
+
+const CH_COMPLETED_PP_END=[12,10,9,4,4];
+
+const CH_ENROLL_RATE_END=[42,38,24,15,12];
+
+const CH_COMPLETE_RATE_END=[48,37,30,23,19]; // corrected (Completed/Enrolled), not copy of enrolment rate
+
+const CH_TREND_SERIES={
+
+  ch_enrolled:      TIERS.map((t,i)=>ramp(CH_ENROLLED_END[i], MONTHS.length, 0.06)),
+
+  ch_completed:      TIERS.map((t,i)=>ramp(CH_COMPLETED_END[i], MONTHS.length, 0.06)),
+
+  ch_enrolled_pp:    TIERS.map((t,i)=>ramp(CH_ENROLLED_PP_END[i], MONTHS.length, 0.1)),
+
+  ch_completed_pp:   TIERS.map((t,i)=>ramp(CH_COMPLETED_PP_END[i], MONTHS.length, 0.1)),
+
+  ch_enroll_rate:    TIERS.map((t,i)=>ramp(CH_ENROLL_RATE_END[i], MONTHS.length, 0.2)),
+
+  ch_complete_rate:  TIERS.map((t,i)=>ramp(CH_COMPLETE_RATE_END[i], MONTHS.length, 0.2)),
+
+};
+
+const CH_TREND_FORMATTERS={ ch_enrolled:fmtNum, ch_completed:fmtNum, ch_enrolled_pp:v=>v.toFixed(1), ch_completed_pp:v=>v.toFixed(1), ch_enroll_rate:fmtPct, ch_complete_rate:fmtPct };
+ 
+const topChallengesBase=[ // name, enrolled, completed, enrolment rate %, completion rate % (all as shown on screenshot)
+
+  ['Challenge 1',360,79,36,27],['Challenge 2',309,56,33,12],['Challenge 3',240,51,25,33],
+
+  ['Challenge 4',190,42,37,26],['Challenge 5',110,27,22,11],['Challenge 6',90,18,20,15],
+
+];
+ 
+function initChallengesCharts(){
+
+  chChallengesEvolution=new Chart(document.getElementById('chChallengesEvolution'),{type:'line',data:{labels:MONTHS,datasets:[]},
+
+    options:{scales:{x:catAxis(),y:valueAxisTicks(fmtNum)},plugins:{legend:{position:'bottom'}}}});
+
+  document.getElementById('chTrendKpiSelect').addEventListener('change', ()=>refreshAll());
+
+}
+ 
+let topChallengesData=[];
+
+let topChallengesSort={col:1, dir:'desc'};
+
+function renderTopChallengesTable(){
+
+  const rows=[...topChallengesData].sort((a,b)=>{
+
+    const av=a[topChallengesSort.col], bv=b[topChallengesSort.col];
+
+    if(typeof av==='string') return topChallengesSort.dir==='asc'? av.localeCompare(bv) : bv.localeCompare(av);
+
+    return topChallengesSort.dir==='asc'? av-bv : bv-av;
+
+  });
+
+  document.getElementById('topChallengesTableBody').innerHTML = rows.map(r=>`<tr><td>${r[0]}</td><td class="num">${fmtNum(r[1])}</td><td class="num">${fmtNum(r[2])}</td><td class="num">${r[3]}%</td><td class="num">${r[4]}%</td></tr>`).join('');
+
+  updateSortArrows('topChallengesTable', topChallengesSort);
+
+}
+
+function sortTopChallenges(col){
+
+  if(topChallengesSort.col===col) topChallengesSort.dir = topChallengesSort.dir==='asc'?'desc':'asc';
+
+  else { topChallengesSort.col=col; topChallengesSort.dir = col===0 ? 'asc':'desc'; }
+
+  renderTopChallengesTable();
+
+}
+
+function updateSortArrows(containerId, sortState){
+
+  document.querySelectorAll('#'+containerId+' th.sortable').forEach(th=>{
+
+    const col=parseInt(th.dataset.col,10);
+
+    const arrow=th.querySelector('.arrow');
+
+    arrow.textContent = col===sortState.col ? (sortState.dir==='asc'?'▲':'▼') : '';
+
+  });
+
+}
+ 
+function refreshChallengesTab(fs){
+
+  const idxsAsc = tierIndicesAsc(fs.tier);
+
+  const rowsAsc = idxsAsc.map(ai=>CH_TABLE_ASC[ai]);
+
+  const totalMembers=rowsAsc.reduce((s,r)=>s+r.members,0), totalEnrolled=rowsAsc.reduce((s,r)=>s+r.enrolled,0), totalCompleted=rowsAsc.reduce((s,r)=>s+r.completed,0);
+
+  document.getElementById('chKpiEnrolled').textContent = totalEnrolled.toLocaleString();
+
+  document.getElementById('chKpiCompleted').textContent = totalCompleted.toLocaleString();
+
+  document.getElementById('chKpiEnrollRate').textContent = fmtPct(100*totalEnrolled/totalMembers);
+
+  document.getElementById('chKpiCompleteRate').textContent = fmtPct(100*totalCompleted/totalEnrolled);
+
+  // Defensible per-person figures: weighted avg of the tier-level avg columns
+
+  const wAvgEnroll = rowsAsc.reduce((s,r)=>s+r.avgEnroll*r.members,0)/totalMembers;
+
+  const wAvgComplete = rowsAsc.reduce((s,r)=>s+r.avgComplete*r.members,0)/totalMembers;
+
+  document.getElementById('chKpiEnrolledPerPerson').textContent = wAvgEnroll.toFixed(1);
+
+  document.getElementById('chKpiCompletedPerPerson').textContent = wAvgComplete.toFixed(1);
+ 
+  const html = rowsAsc.map(r=>{
+
+    const compRate = r.enrolled>0 ? Math.round(100*r.completed/r.enrolled) : 0;
+
+    return `<tr><td>${r.tier}</td><td class="num">${r.members.toLocaleString()}</td><td class="num">${r.enrolled.toLocaleString()}</td><td class="num">${r.enrollRate}%</td><td class="num">${r.avgEnroll}</td><td class="num">${r.completed.toLocaleString()}</td><td class="num">${compRate}%</td><td class="num">${r.avgComplete}</td><td class="num">${r.neverPct}%</td></tr>`;
+
+  }).join('');
+
+  const totalCompRate = totalEnrolled>0 ? Math.round(100*totalCompleted/totalEnrolled) : 0;
+
+  document.getElementById('challengesTierTableBody').innerHTML = fs.tier==='all'
+
+    ? html + `<tr class="total-row"><td>Total</td><td class="num">${totalMembers.toLocaleString()}</td><td class="num">${totalEnrolled.toLocaleString()}</td><td class="num">${fmtPct(100*totalEnrolled/totalMembers)}</td><td class="num">${wAvgEnroll.toFixed(1)}</td><td class="num">${totalCompleted.toLocaleString()}</td><td class="num">${totalCompRate}%</td><td class="num">${wAvgComplete.toFixed(1)}</td><td class="num">—</td></tr>`
+
+    : html;
+ 
+  const kpi = document.getElementById('chTrendKpiSelect').value;
+
+  const idxs = tierIndices(fs.tier);
+
+  chChallengesEvolution.data.labels = MONTHS.slice(fs.lo,fs.hi+1);
+
+  chChallengesEvolution.data.datasets = idxs.map(i=>({
+
+    label:TIERS[i], data:CH_TREND_SERIES[kpi][i].slice(fs.lo,fs.hi+1).map(v=>Math.round(v*productMultiplier(i,fs.product)*100)/100),
+
+    borderColor:TIER_COLORS[i], backgroundColor:'transparent', tension:.3
+
+  }));
+
+  chChallengesEvolution.options.scales.y = valueAxisTicks(CH_TREND_FORMATTERS[kpi]);
+
+  chChallengesEvolution.update();
+ 
+  const mult = fs.product==='wizz' ? 0.05 : fs.product==='cardavantaj' ? 0.95 : 1;
+
+  topChallengesData = topChallengesBase.map(r=>{
+
+    const p = Math.round(r[1]*mult*fs.rangeFrac), c = Math.round(r[2]*mult*fs.rangeFrac);
+
+    return [r[0], p, c, r[3], r[4]];
+
+  });
+
+  renderTopChallengesTable();
+
+}
+ 
+/* ================= Badges (separate tab) ================= */
+
+const BADGE_END=[4.8,3.7,2.6,0.9,0.6]; // Ambassador..Starter, avg badges/member end-of-period
+
+const BADGE_SERIES = TIERS.map((t,i)=>ramp(BADGE_END[i], MONTHS.length, 0.1));
+
+const BADGES_COLLECTED_ASC=[172618,42917,43655,18453,357]; // Starter..Ambassador, sums to 278,000
+
+const NO_BADGES_ASC=[1470,190,35,5,0]; // Starter..Ambassador, sums to 1,700
+
+const BADGES_POPULAR=[ // name, collected, collection rate %
+
+  ['Welcome Badge (first transaction)',61160,22],['Monthly Spender',50040,18],['Category Explorer',38920,14],
+
+  ['Coin Collector',33360,12],['Challenge Champion',27800,10],['Instalment First-Timer',22240,8],
+
+  ['3-Month Loyalty Streak',19460,7],['Big Spender',13900,5],
+
+];
+ 
+function initBadgesCharts(){
+
+  chBadgesEvolution=new Chart(document.getElementById('chBadgesEvolution'),{type:'line',data:{labels:MONTHS,datasets:TIERS.map((t,i)=>({
+
+    label:t, data:BADGE_SERIES[i].slice(), borderColor:TIER_COLORS[i], backgroundColor:'transparent', tension:.3
+
+  }))},options:{scales:{x:catAxis(),y:valueAxisTicks(v=>v.toFixed(1))},plugins:{legend:{position:'bottom'}}}});
+ 
+  chBadgesPopular=new Chart(document.getElementById('chBadgesPopular'),{data:{labels:BADGES_POPULAR.map(b=>b[0]),datasets:[
+
+    {type:'bar',label:'Collected',data:BADGES_POPULAR.map(b=>b[1]),backgroundColor:ORANGE,
+
+      datalabels:{display:true,formatter:v=>fmtNum(v),color:INK,font:{weight:600,size:9.5},anchor:'end',align:'end'}},
+
+    {type:'line',label:'Collection rate %',data:BADGES_POPULAR.map(b=>b[2]),borderColor:INK,backgroundColor:INK,borderWidth:2,pointRadius:3,tension:.3,yAxisID:'y1'}
+
+  ]},options:{indexAxis:'x',scales:{x:catAxis(),y:valueAxisTicks(fmtNum),y1:{position:'right',grid:{display:false},ticks:{callback:v=>v+'%'},min:0,max:25}},plugins:{legend:{position:'bottom'}}}});
+
+}
+ 
+function refreshBadgesTab(fs){
+
+  const idxsAsc = tierIndicesAsc(fs.tier);
+
+  const membersAsc = idxsAsc.map(ai=>MEMBERS[TIERS.length-1-ai]);
+
+  const collectedAsc = idxsAsc.map(ai=>BADGES_COLLECTED_ASC[ai]);
+
+  const noBadgesAsc = idxsAsc.map(ai=>NO_BADGES_ASC[ai]);
+
+  const avgAsc = idxsAsc.map(ai=>BADGE_END[TIERS.length-1-ai]);
+ 
+  const totalCollected = collectedAsc.reduce((a,b)=>a+b,0);
+
+  const totalMembers = membersAsc.reduce((a,b)=>a+b,0);
+
+  const totalNoBadges = noBadgesAsc.reduce((a,b)=>a+b,0);
+
+  document.getElementById('baKpiEarned').textContent = fmtK(totalCollected);
+
+  document.getElementById('baKpiPerPerson').textContent = (totalCollected/totalMembers).toFixed(2);
+
+  document.getElementById('baKpiNoBadges').textContent = totalNoBadges.toLocaleString();
+
+  document.getElementById('baKpiNoBadgesPct').textContent = fmtPct(100*totalNoBadges/totalMembers);
+ 
+  const rows = idxsAsc.map((ai,k)=>{
+
+    const pct = membersAsc[k]>0 ? (100*noBadgesAsc[k]/membersAsc[k]).toFixed(1) : '0.0';
+
+    return `<tr><td>${TIERS_ASC[ai]}</td><td class="num">${membersAsc[k].toLocaleString()}</td><td class="num">${collectedAsc[k].toLocaleString()}</td><td class="num">${avgAsc[k].toFixed(1)}</td><td class="num">${noBadgesAsc[k].toLocaleString()}</td><td class="num">${pct}%</td></tr>`;
+
+  });
+
+  const totalRow = fs.tier==='all' ? `<tr class="total-row"><td>Total</td><td class="num">${totalMembers.toLocaleString()}</td><td class="num">${totalCollected.toLocaleString()}</td><td class="num">${(totalCollected/totalMembers).toFixed(2)}</td><td class="num">${totalNoBadges.toLocaleString()}</td><td class="num">${fmtPct(100*totalNoBadges/totalMembers)}</td></tr>` : '';
+
+  document.getElementById('badgesTierTableBody').innerHTML = rows.join('') + totalRow;
+ 
+  const idxs = tierIndices(fs.tier);
+
+  chBadgesEvolution.data.labels = MONTHS.slice(fs.lo,fs.hi+1);
+
+  chBadgesEvolution.data.datasets = idxs.map(i=>({
+
+    label:TIERS[i], data:BADGE_SERIES[i].slice(fs.lo,fs.hi+1).map(v=>Math.round(v*productMultiplier(i,fs.product)*100)/100),
+
+    borderColor:TIER_COLORS[i], backgroundColor:'transparent', tension:.3
+
+  }));
+
+  chBadgesEvolution.update();
+ 
+  const badgeMult = fs.product==='wizz' ? 0.6 : fs.product==='cardavantaj' ? 1.02 : 1;
+
+  chBadgesPopular.data.datasets[0].data = BADGES_POPULAR.map(b=>Math.round(b[1]*badgeMult*fs.rangeFrac));
+
+  chBadgesPopular.data.datasets[1].data = BADGES_POPULAR.map(b=>b[2]);
+
+  chBadgesPopular.update();
+
+}
+ 
+/* ================= Trends (single chart, all engagement KPIs) ================= */
+
+const COLL_END=[1290,345,98,32,18]; // Ambassador..Starter, coins/engaged member (legacy series, kept for Trends)
+
+const TREND_SERIES={
+
+  coins:            TIERS.map((t,i)=>ramp(COLL_END[i], MONTHS.length, 0.08)),
+
+  redemption:       TIERS.map((t,i)=>ramp([80,58,34,16,8][i], MONTHS.length, 0.2)),
+
+  ch_enrolled_pp:   TIERS.map((t,i)=>ramp(CH_ENROLLED_PP_END[i], MONTHS.length, 0.1)),
+
+  ch_completed_pp:  TIERS.map((t,i)=>ramp(CH_COMPLETED_PP_END[i], MONTHS.length, 0.1)),
+
+  ch_enroll_rate:   TIERS.map((t,i)=>ramp(CH_ENROLL_RATE_END[i], MONTHS.length, 0.2)),
+
+  ch_complete_rate: TIERS.map((t,i)=>ramp(CH_COMPLETE_RATE_END[i], MONTHS.length, 0.2)),
+
+  badges:           TIERS.map((t,i)=>ramp(BADGE_END[i], MONTHS.length, 0.1)),
+
+  challenges:       TIERS.map((t,i)=>ramp(CH_COMPLETED_PP_END[i], MONTHS.length, 0.1)), // alias used by Period Comparison
+
+};
+
+const TREND_FORMATTERS={ coins:fmtNum, redemption:fmtPct, ch_enrolled_pp:v=>v.toFixed(1), ch_completed_pp:v=>v.toFixed(1), ch_enroll_rate:fmtPct, ch_complete_rate:fmtPct, badges:v=>v.toFixed(1), challenges:v=>v.toFixed(1) };
+ 
+function initTrendsChart(){
+
+  chTrendExplorer=new Chart(document.getElementById('chTrendExplorer'),{type:'line',data:{labels:MONTHS,datasets:[]},
+
+    options:{scales:{x:catAxis(),y:valueAxisTicks(fmtNum)},plugins:{legend:{position:'bottom'}}}});
+
+  document.getElementById('trendKpiSelect').addEventListener('change', ()=>refreshAll());
+
+}
+ 
+function refreshTrendsTab(fs){
+
+  const idxs = tierIndices(fs.tier);
+
+  const kpi = document.getElementById('trendKpiSelect').value;
+
+  chTrendExplorer.data.labels = MONTHS.slice(fs.lo,fs.hi+1);
+
+  chTrendExplorer.data.datasets = idxs.map(i=>({
+
+    label:TIERS[i], data:TREND_SERIES[kpi][i].slice(fs.lo,fs.hi+1).map(v=>Math.round(v*productMultiplier(i,fs.product)*100)/100),
+
+    borderColor:TIER_COLORS[i], backgroundColor:'transparent', tension:.3
+
+  }));
+
+  chTrendExplorer.options.scales.y = valueAxisTicks(TREND_FORMATTERS[kpi]);
+
+  chTrendExplorer.update();
+
+}
+ 
+/* ================= Period Comparison ================= */
+
+const pcKpiSel=document.getElementById('pcKpiSelect');
+
+const pcAStart=document.getElementById('pcAStart'), pcAEnd=document.getElementById('pcAEnd');
+
+const pcBStart=document.getElementById('pcBStart'), pcBEnd=document.getElementById('pcBEnd');
+
+[pcAStart,pcAEnd,pcBStart,pcBEnd].forEach(sel=>{ MONTHS.forEach(m=>sel.add(new Option(m,m))); });
+
+pcAStart.value=MONTHS[MONTHS.length-2]; pcAEnd.value=MONTHS[MONTHS.length-2];
+
+pcBStart.value=MONTHS[MONTHS.length-1]; pcBEnd.value=MONTHS[MONTHS.length-1];
+ 
+function initPeriodCompareChart(){
+
+  chPeriodCompare=new Chart(document.getElementById('chPeriodCompare'),{type:'bar',data:{labels:[],datasets:[
+
+    {label:'Period A',data:[],backgroundColor:NEUTRAL_BAR,datalabels:dl(v=>v.raw??v,{anchor:'end',align:'end'})},
+
+    {label:'Period B',data:[],backgroundColor:RED,datalabels:dl(v=>v.raw??v,{anchor:'end',align:'end'})}
+
+  ]},options:{scales:{x:catAxis(),y:valueAxis()},plugins:{legend:{position:'bottom'},datalabels:{display:true,color:INK,font:{weight:600,size:10},anchor:'end',align:'end'}}}});
+
+  pcKpiSel.addEventListener('change', ()=>refreshAll());
+
+  document.getElementById('pcApplyBtn').addEventListener('click', ()=>refreshAll());
+
+}
+ 
+function periodAvg(kpi, tierIdx, startVal, endVal, product){
+
+  const s=MONTHS.indexOf(startVal), e=MONTHS.indexOf(endVal);
+
+  const lo=Math.min(s,e), hi=Math.max(s,e);
+
+  const slice = TREND_SERIES[kpi][tierIdx].slice(lo,hi+1);
+
+  const avg = slice.reduce((a,b)=>a+b,0)/slice.length;
+
+  return Math.round(avg*productMultiplier(tierIdx,product)*100)/100;
+
+}
+
+function periodLabelShort(startVal,endVal){ return startVal===endVal ? startVal : `${startVal} → ${endVal}`; }
+ 
+function refreshPeriodComparisonTab(fs){
+
+  const idxs = tierIndices(fs.tier);
+
+  const kpi = pcKpiSel.value;
+
+  const fmt = TREND_FORMATTERS[kpi];
+
+  const labelA = periodLabelShort(pcAStart.value,pcAEnd.value);
+
+  const labelB = periodLabelShort(pcBStart.value,pcBEnd.value);
+ 
+  const dataA = idxs.map(i=>periodAvg(kpi,i,pcAStart.value,pcAEnd.value,fs.product));
+
+  const dataB = idxs.map(i=>periodAvg(kpi,i,pcBStart.value,pcBEnd.value,fs.product));
+ 
+  chPeriodCompare.data.labels = pick(TIERS, idxs);
+
+  chPeriodCompare.data.datasets[0].label = `Period A (${labelA})`;
+
+  chPeriodCompare.data.datasets[0].data = dataA;
+
+  chPeriodCompare.data.datasets[1].label = `Period B (${labelB})`;
+
+  chPeriodCompare.data.datasets[1].data = dataB;
+
+  chPeriodCompare.data.datasets[0].datalabels.formatter = v=>fmt(v);
+
+  chPeriodCompare.data.datasets[1].datalabels.formatter = v=>fmt(v);
+
+  chPeriodCompare.update();
+ 
+  document.getElementById('pcColA').textContent = `Period A (${labelA})`;
+
+  document.getElementById('pcColB').textContent = `Period B (${labelB})`;
+
+  document.getElementById('pcTableBody').innerHTML = idxs.map((i,k)=>{
+
+    const av=dataA[k], bv=dataB[k];
+
+    const deltaAbs = Math.round((bv-av)*100)/100;
+
+    const deltaPct = av!==0 ? (deltaAbs/av*100) : null;
+
+    const color = deltaAbs>=0 ? 'var(--green)' : 'var(--red)';
+
+    return `<tr><td>${TIERS[i]}</td><td class="num">${fmt(av)}</td><td class="num">${fmt(bv)}</td><td class="num" style="color:${color};">${deltaAbs>=0?'+':''}${fmt(deltaAbs)}</td><td class="num" style="color:${color};">${deltaPct!==null?(deltaPct>=0?'+':'')+deltaPct.toFixed(1)+'%':'—'}</td></tr>`;
+
+  }).join('');
+
+}
+ 
+/* ================= Tier Progression ================= */
+
+const TIER_MIGRATION_ENTRIES_LTD=[7,150,654,1953,4706], TIER_MIGRATION_EXITS_LTD=[-6,-142,-554,-1269,-1654];
+
+const TIER_IMPACT_TRANSITIONS=['Starter → Explorer','Explorer → Insider','Insider → Elite','Elite → Ambassador'];
+
+const TIER_IMPACT_COUNTS_LTD=[5003,2200,884,224];
+
+const TIER_IMPACT_TIMES=['2.4 months','3.8 months','5.1 months','7.9 months'];
+
+const TIER_TIMELINE_FULL=TIERS.map((t,i)=>ramp(20+i*15,MONTHS.length,0.3));
+ 
+function initTierCharts(){
+
+  chTierMembers=new Chart(document.getElementById('chTierMembers'),{type:'bar',data:{labels:TIERS,datasets:[
+
+    {label:'Members',data:MEMBERS.slice(),backgroundColor:NEUTRAL_BAR},
+
+    {label:'Active members',data:ACTIVE.slice(),backgroundColor:RED}
+
+  ]},options:{indexAxis:'y',scales:{x:valueAxis(),y:catAxis()},plugins:{legend:{position:'bottom'},datalabels:{display:true,formatter:v=>fmtNum(v),color:INK,font:{weight:600,size:10},anchor:'end',align:'end'}}}});
+ 
+  chTierMigration=new Chart(document.getElementById('chTierMigration'),{type:'bar',data:{labels:TIERS,datasets:[
+
+    {label:'Entries',data:TIER_MIGRATION_ENTRIES_LTD.slice(),backgroundColor:ORANGE},
+
+    {label:'Exits',data:TIER_MIGRATION_EXITS_LTD.slice(),backgroundColor:RED}]},
+
+    options:{scales:{x:catAxis(),y:valueAxis()},plugins:{legend:{position:'bottom'},datalabels:{display:true,formatter:v=>fmtNum(v),color:INK,font:{weight:600,size:9.5}}}}});
+ 
+  chTierTimeline=new Chart(document.getElementById('chTierTimeline'),{type:'line',data:{labels:MONTHS,datasets:TIERS.map((t,i)=>({label:t,data:TIER_TIMELINE_FULL[i].slice(),borderColor:TIER_COLORS[i],backgroundColor:'transparent',tension:.3}))},
+
+    options:{scales:{x:catAxis(),y:valueAxisTicks(fmtNum)},plugins:{legend:{position:'bottom'}}}});
+
+}
+ 
+function refreshTierTab(fs){
+
+  const idxs = tierIndices(fs.tier);
+ 
+  const membersAtEnd = idxs.map(i=>Math.round(MEMBERS[i]*fs.endFrac*productMultiplier(i,fs.product)));
+
+  const activeAtEnd = idxs.map(i=>Math.round(ACTIVE[i]*fs.endFrac*productMultiplier(i,fs.product)));
+
+  chTierMembers.data.labels = pick(TIERS, idxs);
+
+  chTierMembers.data.datasets[0].data = membersAtEnd;
+
+  chTierMembers.data.datasets[1].data = activeAtEnd;
+
+  chTierMembers.update();
+
+  const totalMembersAtEnd = membersAtEnd.reduce((a,b)=>a+b,0), totalActiveAtEnd = activeAtEnd.reduce((a,b)=>a+b,0);
+
+  document.getElementById('tierKpiMembers').textContent = totalMembersAtEnd.toLocaleString();
+
+  document.getElementById('tierKpiActive').textContent = totalActiveAtEnd.toLocaleString();
+
+  document.getElementById('tierKpiActivePct').textContent = totalMembersAtEnd>0 ? fmtPct(100*totalActiveAtEnd/totalMembersAtEnd)+' of total members' : '—';
+ 
+  chTierMigration.data.labels = pick(TIERS, idxs);
+
+  chTierMigration.data.datasets[0].data = idxs.map(i=>Math.round(TIER_MIGRATION_ENTRIES_LTD[i]*fs.rangeFrac*productMultiplier(i,fs.product)));
+
+  chTierMigration.data.datasets[1].data = idxs.map(i=>Math.round(TIER_MIGRATION_EXITS_LTD[i]*fs.rangeFrac*productMultiplier(i,fs.product)));
+
+  chTierMigration.update();
+ 
+  const momPct=['28%','7%','6%','5%','2%'];
+
+  const tierTableRows=idxs.map((i,k)=>[TIERS[i],membersAtEnd[k],activeAtEnd[k], membersAtEnd[k]?((activeAtEnd[k]/membersAtEnd[k])*100).toFixed(0)+'%':'—', momPct[i]]);
+
+  document.getElementById('tierTableBody').innerHTML=tierTableRows.map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1].toLocaleString()}</td><td class="num">${r[2].toLocaleString()}</td><td class="num">${r[3]}</td><td class="num">${r[4]}</td></tr>`).join('');
+ 
+  const impactIdxs = fs.tier==='all' ? [0,1,2,3] : [0,1,2,3].filter(k=>TIER_IMPACT_TRANSITIONS[k].includes(fs.tier));
+
+  const tierImpactRows=impactIdxs.map(i=>[TIER_IMPACT_TRANSITIONS[i], Math.round(TIER_IMPACT_COUNTS_LTD[i]*fs.endFrac).toLocaleString()+' (as of '+endSel.value+')', TIER_IMPACT_TIMES[i], '<span class="data-pending">not available</span>']);
+
+  document.getElementById('tierImpactTableBody').innerHTML=tierImpactRows.map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join('') || '<tr><td colspan="4">No transitions match the selected tier filter.</td></tr>';
+ 
+  chTierTimeline.data.labels = MONTHS.slice(fs.lo,fs.hi+1);
+
+  chTierTimeline.data.datasets = idxs.map(i=>({label:TIERS[i],data:TIER_TIMELINE_FULL[i].slice(fs.lo,fs.hi+1).map(v=>Math.round(v*productMultiplier(i,fs.product)*10)/10),borderColor:TIER_COLORS[i],backgroundColor:'transparent',tension:.3}));
+
+  chTierTimeline.update();
+
+}
+ 
+/* ================= Wizz reconciliation ================= */
+
+function refreshWizzTab(fs){
+
+  const notApplicable = fs.product === 'cardavantaj';
+
+  document.getElementById('wizzNotApplicable').style.display = notApplicable ? 'block' : 'none';
+
+  document.getElementById('wizzContent').style.display = notApplicable ? 'none' : 'block';
+
+  if(notApplicable) return;
+ 
+  const wizzCollectionRows=[
+
+    ['1%','842K','210K'],
+
+    ['2%','1,530K','486K'],
+
+    ['Total','2,372K','696K'],
+
+  ];
+
+  document.getElementById('wizzCollectionTableBody').innerHTML=wizzCollectionRows.map((r,i)=>`<tr${i===wizzCollectionRows.length-1?' class="total-row"':''}><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td></tr>`).join('');
+ 
+  const wizzChallengesBase=[
+
+    ['Book a flight',9820,3140],
+
+    ['Add checked bag',7200,2016],
+
+    ['Fly to a new destination',6100,1220],
+
+    ['Upgrade to Plus',5400,540],
+
+    ['Refer a friend',3100,868],
+
+  ];
+
+  const wizzChallengesRows = wizzChallengesBase.map(r=>{
+
+    const p=Math.round(r[1]*fs.rangeFrac), c=Math.round(r[2]*fs.rangeFrac);
+
+    return [r[0],p,c,p>0?fmtPct(100*c/p):'0%'];
+
+  });
+
+  const wTotalP=wizzChallengesRows.reduce((s,r)=>s+r[1],0), wTotalC=wizzChallengesRows.reduce((s,r)=>s+r[2],0);
+
+  document.getElementById('wizzChallengesTableBody').innerHTML=wizzChallengesRows.map(r=>`<tr><td>${r[0]}</td><td class="num">${fmtNum(r[1])}</td><td class="num">${fmtNum(r[2])}</td><td class="num">${r[3]}</td></tr>`).join('')
+
+    + `<tr class="total-row"><td>Total</td><td class="num">${fmtNum(wTotalP)}</td><td class="num">${fmtNum(wTotalC)}</td><td class="num">${wTotalP>0?fmtPct(100*wTotalC/wTotalP):'0%'}</td></tr>`;
+ 
+  const wizzBadgesRows=[
+
+    ['Runway Ready',1,8.2],['Jetsetter',2,7.4],['Cloud Chaser',1,6.8],['Miles Master',3,6.1],
+
+    ['Layover Legend',1,5.9],['Turbulence Tamer',2,5.2],['Window Seat',1,4.7],['Frequent Flyer',1,4.3],
+
+    ['Boarding First',2,3.9],['Globe Trotter',1,3.5]
+
+  ].sort((a,b)=>b[2]-a[2]);
+ 
+  const wizzLabels = wizzBadgesRows.map(r=>`${r[0]} · Level ${r[1]}`);
+
+  const wizzData = wizzBadgesRows.map(r=>r[2]);
+
+  const wizzColors = wizzBadgesRows.map(r=>({1:PEACH,2:REDALT,3:RED}[r[1]]));
+
+  if(chWizzBadges){
+
+    chWizzBadges.data.labels=wizzLabels; chWizzBadges.data.datasets[0].data=wizzData; chWizzBadges.data.datasets[0].backgroundColor=wizzColors; chWizzBadges.update();
+
+  } else {
+
+    chWizzBadges=new Chart(document.getElementById('chWizzBadges'),{type:'bar',data:{labels:wizzLabels,datasets:[{data:wizzData,backgroundColor:wizzColors,borderRadius:3}]},
+
+      options:{indexAxis:'y',scales:{x:valueAxisTicks(fmtPct),y:{grid:{display:false},border:{display:false},ticks:{autoSkip:false}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:(ctx)=>fmtPct(ctx.raw)+' of cardholders earned this badge'}}}}});
+
+  }
+
+}
+ 
+/* ================= Global refresh dispatcher ================= */
+
+function refreshAll(){
+
+  const fs = filterState();
+
+  refreshExecTab(fs);
+
+  refreshFinancialTab(fs);
+
+  refreshCoinsTab(fs);
+
+  refreshChallengesTab(fs);
+
+  refreshBadgesTab(fs);
+
+  refreshTrendsTab(fs);
+
+  refreshPeriodComparisonTab(fs);
+
+  refreshTierTab(fs);
+
+  refreshWizzTab(fs);
+
+}
+ 
+/* ================= Init ================= */
+
+initExecCharts();
+
+buildProgressionChart(0);
+
+document.getElementById('progressionSelect').addEventListener('change', function(){ buildProgressionChart(parseInt(this.value,10)); });
+
+initCoinsCharts();
+
+initChallengesCharts();
+
+initBadgesCharts();
+
+initTrendsChart();
+
+initPeriodCompareChart();
+
+initTierCharts();
+
+refreshAll();
+</script>
+</body>
+</html>
+
+ 
